@@ -688,13 +688,12 @@
 
 
  (function() {
-  const line1Text = "Registra, Analiza.";
-  const line2Text = "Mejora.";
+  const line1Text = "Autopartes, Toro, Dept.";
+  const line2Text = "Cotizaciones.";
   
-  // Velocidad más lenta (puedes subir o bajar este número en ms)
   const typingSpeed = 100; 
   const erasingSpeed = 60;
-  const pauseTime = 2000; // Tiempo de espera (en ms) cuando termina de escribir antes de borrar
+  const pauseTime = 2000; 
 
   function iniciarEfectoTypewriter() {
     const elLine1 = document.getElementById('typedLine1');
