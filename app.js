@@ -707,36 +707,30 @@
     let isDeleting = false;
 
     function loop() {
-      // Fase 1: Escribir línea 1
       if (!isDeleting && i <= line1Text.length) {
         elLine1.textContent = line1Text.substring(0, i);
         i++;
         setTimeout(loop, typingSpeed);
       } 
-      // Fase 2: Escribir línea 2
       else if (!isDeleting && j <= line2Text.length) {
         elLine2.textContent = line2Text.substring(0, j);
         j++;
         setTimeout(loop, typingSpeed);
       } 
-      // Fase 3: Pausa cuando está completo, luego cambia a modo borrado
       else if (!isDeleting && i > line1Text.length && j > line2Text.length) {
         isDeleting = true;
         setTimeout(loop, pauseTime);
       } 
-      // Fase 4: Borrar línea 2
       else if (isDeleting && j > 0) {
         j--;
         elLine2.textContent = line2Text.substring(0, j);
         setTimeout(loop, erasingSpeed);
       } 
-      // Fase 5: Borrar línea 1
       else if (isDeleting && i > 0) {
         i--;
         elLine1.textContent = line1Text.substring(0, i);
         setTimeout(loop, erasingSpeed);
       } 
-      // Reiniciar ciclo de escritura
       else if (isDeleting && i === 0 && j === 0) {
         isDeleting = false;
         setTimeout(loop, 500);
