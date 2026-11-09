@@ -688,8 +688,8 @@
 
 
  (function() {
-  const line1Text = "Autopartes, Toro, Dept.";
-  const line2Text = "Cotizaciones.";
+  const line1Text = "Autopartes, Toro";
+  const line2Text = " Dept. Cotizaciones.";
   
   const typingSpeed = 100; 
   const erasingSpeed = 60;
