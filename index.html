@@ -442,42 +442,6 @@
 
     </main>
   </section>
-
-  <!-- Script de Animación Typewriter -->
-  <script>
-    (function() {
-      const line1Text = "Autopartes, Toro";
-      const line2Text = " Dept. Cotizaciones.";
-      const typingSpeed = 100, erasingSpeed = 60, pauseTime = 2000;
-
-      function iniciarEfectoTypewriter() {
-        const elLine1 = document.getElementById('typedLine1');
-        const elLine2 = document.getElementById('typedLine2');
-        if (!elLine1 || !elLine2) return;
-
-        let i = 0, j = 0, isDeleting = false;
-        function loop() {
-          if (!isDeleting && i <= line1Text.length) {
-            elLine1.textContent = line1Text.substring(0, i); i++; setTimeout(loop, typingSpeed);
-          } else if (!isDeleting && j <= line2Text.length) {
-            elLine2.textContent = line2Text.substring(0, j); j++; setTimeout(loop, typingSpeed);
-          } else if (!isDeleting && i > line1Text.length && j > line2Text.length) {
-            isDeleting = true; setTimeout(loop, pauseTime);
-          } else if (isDeleting && j > 0) {
-            j--; elLine2.textContent = line2Text.substring(0, j); setTimeout(loop, erasingSpeed);
-          } else if (isDeleting && i > 0) {
-            i--; elLine1.textContent = line1Text.substring(0, i); setTimeout(loop, erasingSpeed);
-          } else if (isDeleting && i === 0 && j === 0) {
-            isDeleting = false; setTimeout(loop, 500);
-          }
-        }
-        loop();
-      }
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciarEfectoTypewriter);
-      else iniciarEfectoTypewriter();
-    })();
-  </script>
-
   <script src="app.js"></script>
 </body>
 </html>
