@@ -754,5 +754,9 @@
 })();
 
 
+
+
+
+
   if(!getUser()) $('loginError').textContent = 'Crea tu acceso local para comenzar.';
 })();
