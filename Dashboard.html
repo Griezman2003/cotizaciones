@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#020617">
+  <title>Cotizaciones | Acceso local</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Flatpickr CSS & JS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+  <!-- Chart.js para la gráfica -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- html2canvas para la descarga del reporte en imagen -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#effef7',
+              400: '#4ce0a0',
+              500: '#22c55e',
+              600: '#16a34a',
+              950: '#032e1d',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="min-h-full flex flex-col font-sans bg-slate-950 text-slate-100 antialiased selection:bg-brand-400 selection:text-slate-950">
+
+  <!-- VISTA DE AUTENTICACIÓN -->
+  <section id="authView" class="min-h-screen w-full grid grid-cols-1 lg:grid-cols-12">
+    <aside class="hidden lg:flex lg:col-span-6 xl:col-span-7 flex-col justify-between p-12 xl:p-16 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-950 border-r border-slate-800/60 relative overflow-hidden">
+      <div class="absolute -top-32 -left-32 w-96 h-96 bg-brand-400/10 rounded-full blur-3xl pointer-events-none"></div>
+      
+      <a class="flex items-center gap-3 text-2xl font-black tracking-tight text-white z-10" href="#">
+        <span class="w-10 h-10 rounded-xl bg-brand-400 text-slate-950 grid place-items-center font-black text-xl shadow-lg shadow-brand-400/20">C</span>
+        otiza<span class="text-brand-400">ciones</span>
+      </a>
+
+      <div class="max-w-2xl my-auto py-12 z-10">
+        <span class="text-xs font-bold tracking-widest uppercase text-brand-400">Tu espacio de trabajo</span>
+        <h1 class="text-5xl xl:text-7xl font-extrabold tracking-tight text-white mt-4 mb-6 leading-tight">
+          Registra. Analiza. <br><span class="text-brand-400">Mejora.</span>
+        </h1>
+        <p class="text-slate-400 text-lg leading-relaxed max-w-xl">
+          Control diario, analítica con desglose individual de tiempos, exportación a Excel e imagen y rendimiento optimizado.
+        </p>
+      </div>
+      <div class="text-xs text-slate-500 z-10">PartFlow · Aplicación local</div>
+    </aside>
+
+    <main class="lg:col-span-6 xl:col-span-5 flex items-center justify-center p-6 sm:p-12 bg-slate-950 w-full">
+      <div class="w-full max-w-md space-y-6">
+        <div id="loginForm" class="space-y-6">
+          <div>
+            <span class="text-xs font-bold tracking-widest uppercase text-brand-400">Bienvenido de nuevo</span>
+            <h2 class="text-3xl font-bold tracking-tight text-white mt-1">Inicia sesión</h2>
+          </div>
+          <form id="doLogin" class="space-y-4">
+            <div>
+              <label for="loginUser" class="block text-xs font-semibold text-slate-300 mb-2">Usuario</label>
+              <input id="loginUser" autocomplete="username" required placeholder="Tu usuario" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-400">
+            </div>
+            <div>
+              <label for="loginPin" class="block text-xs font-semibold text-slate-300 mb-2">Contraseña / PIN</label>
+              <input id="loginPin" type="password" autocomplete="current-password" required placeholder="Tu contraseña" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-400">
+            </div>
+            <button class="w-full mt-2 py-3.5 px-4 bg-brand-400 text-slate-950 font-bold rounded-xl transition" type="submit">Entrar →</button>
+            <div class="text-red-400 text-xs min-h-[1.25rem]" id="loginError"></div>
+          </form>
+          <div class="text-center text-sm text-slate-400">
+            ¿Es tu primera vez? <button class="text-brand-400 font-bold hover:underline bg-transparent border-0 p-0 cursor-pointer" id="showRegister">Crear acceso local</button>
+          </div>
+        </div>
+
+        <div id="registerForm" class="hidden space-y-6">
+          <div>
+            <span class="text-xs font-bold tracking-widest uppercase text-brand-400">Configuración inicial</span>
+            <h2 class="text-3xl font-bold tracking-tight text-white mt-1">Crea tu acceso</h2>
+          </div>
+          <form id="doRegister" class="space-y-4">
+            <div>
+              <label for="newUser" class="block text-xs font-semibold text-slate-300 mb-2">Usuario</label>
+              <input id="newUser" required minlength="3" autocomplete="username" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-400">
+            </div>
+            <div>
+              <label for="newPin" class="block text-xs font-semibold text-slate-300 mb-2">Contraseña / PIN</label>
+              <input id="newPin" type="password" required minlength="4" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-400">
+            </div>
+            <div>
+              <label for="confirmPin" class="block text-xs font-semibold text-slate-300 mb-2">Confirmar contraseña</label>
+              <input id="confirmPin" type="password" required minlength="4" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-400">
+            </div>
+            <button class="w-full mt-2 py-3.5 px-4 bg-brand-400 text-slate-950 font-bold rounded-xl transition" type="submit">Crear acceso</button>
+            <div class="text-red-400 text-xs min-h-[1.25rem]" id="registerError"></div>
+          </form>
+          <div class="text-center text-sm text-slate-400">
+            <button class="text-brand-400 font-bold hover:underline bg-transparent border-0 p-0 cursor-pointer" id="showLogin">Volver a iniciar sesión</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </section>
+
+  <!-- VISTA DE APLICACIÓN PRINCIPAL -->
+  <section class="hidden min-h-screen w-full flex flex-col bg-slate-950" id="appView">
+    <header class="w-full h-16 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md px-4 sm:px-8 flex items-center justify-between sticky top-0 z-50">
+      <a class="flex items-center gap-2.5 text-xl font-black tracking-tight text-white" href="#">
+        <span class="w-8 h-8 rounded-lg bg-brand-400 text-slate-950 grid place-items-center font-black text-base">C</span>
+        Otiza<span class="text-brand-400">ciones</span>
+      </a>
+      <div class="flex items-center gap-3 text-slate-300 text-sm">
+        <span id="welcomeUser" class="font-medium">Usuario</span>
+        <span class="w-8 h-8 rounded-full bg-emerald-950 text-brand-400 border border-brand-400/30 flex items-center justify-center font-bold text-xs" id="userInitial">U</span>
+        <button class="px-3 py-1.5 rounded-lg border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white text-xs font-semibold transition" id="logout">Salir</button>
+      </div>
+    </header>
+
+    <main class="w-full flex-1 p-4 sm:p-6 lg:p-8 flex flex-col justify-between">
+      <div class="w-full space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-800/50">
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Registro de Operaciones</h1>
+            <p class="text-slate-400 text-xs sm:text-sm mt-1">Control diario y analítica avanzada con rendimiento optimizado.</p>
+          </div>
+          <div class="flex items-center gap-2.5 flex-wrap">
+            <button class="px-3.5 py-2 rounded-xl border border-slate-700 hover:border-slate-500 text-slate-200 text-xs font-semibold transition bg-slate-900/40" id="exportBtn">↓ Exportar</button>
+            <button class="px-3.5 py-2 rounded-xl border border-brand-400/40 bg-brand-400/10 text-brand-400 hover:bg-brand-400/20 text-xs font-bold transition" id="exportExcelBtn">Exportar Excel (CSV)</button>
+            <button class="px-3.5 py-2 rounded-xl border border-rose-500/40 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 text-xs font-semibold transition" id="purgeBtn">🧹 Purgar Histórico</button>
+            <label class="px-3.5 py-2 rounded-xl border border-slate-700 hover:border-slate-500 text-slate-200 text-xs font-semibold transition bg-slate-900/40 cursor-pointer" for="importFile">↑ Importar</label>
+            <input id="importFile" type="file" accept="application/json" class="hidden">
+          </div>
+        </div>
+
+        <!-- Estadísticas Rápidas del Día -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800/80">
+            <small class="text-slate-400 text-xs font-medium block">Cotizaciones de Hoy</small>
+            <strong id="totalCotizStat" class="text-3xl font-black text-white mt-2 block">0</strong>
+          </div>
+          <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800/80">
+            <small class="text-slate-400 text-xs font-medium block">Tiempo promedio Cotización</small>
+            <strong id="averageStat" class="text-3xl font-black text-brand-400 mt-2 block">0 min</strong>
+          </div>
+          <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800/80">
+            <small class="text-slate-400 text-xs font-medium block">Pedidos Especiales</small>
+            <strong id="ordersStat" class="text-3xl font-black text-white mt-2 block">0</strong>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          <!-- Panel Izquierdo: Formulario -->
+          <section class="lg:col-span-4 p-5 sm:p-6 rounded-2xl bg-slate-900/70 border border-slate-800/80 shadow-sm">
+            <h3 class="text-base font-bold text-white mb-4 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-brand-400"></span>
+              Nueva operación
+            </h3>
+            <form id="entryForm" class="space-y-4">
+              <div>
+                <label for="operationDate" class="block text-xs font-semibold text-slate-300 mb-1.5">Fecha de la operación</label>
+                <input type="text" id="operationDate" required readonly placeholder="Selecciona la fecha" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white cursor-pointer focus:outline-none">
+              </div>
+
+              <div>
+                <label for="type" class="block text-xs font-semibold text-slate-300 mb-1.5">Tipo de operación</label>
+                <select id="type" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-400">
+                  <option value="Cotización">Cotización</option>
+                  <option value="Pedido especial">Pedido especial</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="key" class="block text-xs font-semibold text-slate-300 mb-1.5">Clave</label>
+                <input id="key" required placeholder="Ej. A123-B" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-brand-400">
+              </div>
+
+              <!-- Cotización -->
+              <div id="cotizacionFields" class="space-y-4">
+                <div>
+                  <label for="minutes" class="block text-xs font-semibold text-slate-300 mb-1.5">Tiempo empleado (minutos)</label>
+                  <input id="minutes" type="number" min="0.1" step="0.1" placeholder="Ej. 5" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-400">
+                </div>
+              </div>
+
+              <!-- Pedido Especial -->
+              <div id="pedidoFields" class="space-y-4 hidden">
+                <div>
+                  <label for="description" class="block text-xs font-semibold text-slate-300 mb-1.5">Descripción</label>
+                  <input id="description" placeholder="Ej. Faro delantero derecho" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-brand-400">
+                </div>
+                <div>
+                  <label for="supplier" class="block text-xs font-semibold text-slate-300 mb-1.5">Proveedor</label>
+                  <input id="supplier" placeholder="Ej. Autopartes Morsa" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-brand-400">
+                </div>
+                <div>
+                  <label for="arrivalDate" class="block text-xs font-semibold text-slate-300 mb-1.5">¿Cuándo llega?</label>
+                  <input type="text" id="arrivalDate" readonly placeholder="Selecciona fecha" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white cursor-pointer focus:outline-none">
+                </div>
+                <div>
+                  <label for="responsible" class="block text-xs font-semibold text-slate-300 mb-1.5">Responsable del pedido</label>
+                  <input id="responsible" placeholder="Ej. Juan López" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-brand-400">
+                </div>
+              </div>
+
+              <button class="w-full py-3 px-4 bg-brand-400 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl transition shadow-md mt-2" type="submit">Guardar operación</button>
+              <div class="text-red-400 text-xs min-h-[1rem]" id="entryError"></div>
+            </form>
+          </section>
+
+          <!-- Panel Derecho: Tablas Diarias y Reporte Consolidado -->
+          <section class="lg:col-span-8 space-y-6">
+            
+            <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80 flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 cursor-pointer">
+                <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 002-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <input type="text" id="rangePicker" readonly placeholder="Filtrar por rango de fecha" class="bg-transparent text-xs text-slate-200 focus:outline-none cursor-pointer min-w-[200px]">
+              </div>
+              <div class="flex items-center gap-2">
+                <button id="weeklySummaryBtn" class="px-3.5 py-2 rounded-xl border border-brand-400/40 bg-brand-400/10 text-brand-400 hover:bg-brand-400/20 text-xs font-bold transition">Generar Reporte</button>
+                <button id="clearFilters" class="text-xs text-slate-400 hover:text-white px-2 py-1 font-semibold">Ver solo Hoy</button>
+              </div>
+            </div>
+
+            <div id="weeklySection" class="hidden p-5 sm:p-6 rounded-2xl bg-slate-900/90 border border-brand-400/30 shadow-lg space-y-5">
+
+              <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
+                <div>
+                  <span class="text-xs font-bold tracking-widest uppercase text-brand-400"></span>
+                  <div class="flex items-center gap-2 mt-1">
+                    <input type="text" id="reportRangeSelector" readonly placeholder="Seleccionar rango de fechas" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white cursor-pointer focus:outline-none min-w-[190px]">
+                    <span id="weeklyRangeTitle" class="text-xs text-slate-300 font-medium"></span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2" data-html2canvas-ignore="true">
+                  <button id="downloadReportImg" class="px-3.5 py-2 rounded-xl bg-brand-400 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition shadow-md flex items-center gap-1.5">
+                    Descargar
+                  </button>
+                  <button id="closeWeekly" class="text-slate-400 hover:text-white text-xs font-semibold px-3 py-2 rounded-xl border border-slate-800 bg-slate-950 transition">
+                    Cerrar
+                  </button>
+                </div>
+              </div>
+
+              <div id="weeklyReportCapture" class="space-y-5 p-2 bg-slate-900 rounded-xl">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
+                    <span class="text-slate-400 text-[11px] block">Total Cotizaciones (Período)</span>
+                    <strong id="weekTotalCount" class="text-xl font-black text-white mt-1 block">0</strong>
+                  </div>
+                  <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
+                    <span class="text-slate-400 text-[11px] block">Tiempo Promedio del Período</span>
+                    <strong id="weekAvgTime" class="text-xl font-black text-brand-400 mt-1 block">0 min</strong>
+                  </div>
+                  <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
+                    <span class="text-slate-400 text-[11px] block">Media / Mediana del Período</span>
+                    <strong id="weekMedianTime" class="text-xl font-black text-white mt-1 block">0 min</strong>
+                  </div>
+                </div>
+
+                <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 relative h-72">
+                  <canvas id="weeklyChart"></canvas>
+                </div>
+
+                <div class="w-full overflow-x-auto rounded-xl border border-slate-800">
+                  <table class="w-full text-left text-xs border-collapse min-w-[600px]">
+                    <thead>
+                      <tr class="bg-slate-950/90 border-b border-slate-800 text-slate-400 uppercase font-semibold text-[11px] tracking-wider">
+                        <th class="p-3">Día</th>
+                        <th class="p-3">Fecha</th>
+                        <th class="p-3">Claves y Tiempos Individuales</th>
+                        <th class="p-3 text-right">Promedio del Día</th>
+                      </tr>
+                    </thead>
+                    <tbody id="weeklyCotizBody" class="divide-y divide-slate-800/60 bg-slate-900/30"></tbody>
+                  </table>
+                  <div id="emptyWeekly" class="text-center text-slate-500 py-6 text-xs font-medium">No hay cotizaciones registradas en este rango de fechas.</div>
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="p-5 sm:p-6 rounded-2xl bg-slate-900/70 border border-slate-800/80 shadow-sm flex flex-col">
+              <h3 class="text-base font-bold text-white mb-4 flex items-center justify-between">
+                <span>Historial de Cotizaciones</span>
+              </h3>
+              <div class="w-full overflow-x-auto rounded-xl border border-slate-800">
+                <table class="w-full text-left text-xs border-collapse min-w-[500px]">
+                  <thead>
+                    <tr class="bg-slate-950/80 border-b border-slate-800 text-slate-400 uppercase font-semibold text-[11px] tracking-wider">
+                      <th class="p-3.5">Fecha</th>
+                      <th class="p-3.5">Clave</th>
+                      <th class="p-3.5">Tiempo de Cotización</th>
+                      <th class="p-3.5 text-right">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cotizBody" class="divide-y divide-slate-800/60 bg-slate-900/30"></tbody>
+                </table>
+                <div id="emptyCotiz" class="text-center text-slate-500 py-8 text-sm font-medium">No hay cotizaciones para el período seleccionado.</div>
+              </div>
+              
+              <div class="flex items-center justify-between pt-3 px-1 text-xs text-slate-400" id="cotizPagination">
+                <span id="cotizPageInfo">Mostrando 50 de 0</span>
+                <button id="loadMoreCotiz" class="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-950 hover:text-white transition hidden">Cargar 50 más...</button>
+              </div>
+            </div>
+
+            <!-- TABLA 2: PEDIDOS ESPECIALES -->
+            <div class="p-5 sm:p-6 rounded-2xl bg-slate-900/70 border border-slate-800/80 shadow-sm flex flex-col">
+              <h3 class="text-base font-bold text-white mb-4 flex items-center justify-between">
+                <span>Historial de Pedidos Especiales</span>
+              </h3>
+              <div class="w-full overflow-x-auto rounded-xl border border-slate-800">
+                <table class="w-full text-left text-xs border-collapse min-w-[750px]">
+                  <thead>
+                    <tr class="bg-slate-950/80 border-b border-slate-800 text-slate-400 uppercase font-semibold text-[11px] tracking-wider">
+                      <th class="p-3.5">Clave</th>
+                      <th class="p-3.5">Descripción</th>
+                      <th class="p-3.5">Proveedor</th>
+                      <th class="p-3.5 text-center">Atendido</th>
+                      <th class="p-3.5">F.Pedido</th>
+                      <th class="p-3.5">¿Fecha llega?</th>
+                      <th class="p-3.5">Responsable</th>
+                      <th class="p-3.5 text-right">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody id="pedidosBody" class="divide-y divide-slate-800/60 bg-slate-900/30"></tbody>
+                </table>
+                <div id="emptyPedidos" class="text-center text-slate-500 py-8 text-sm font-medium">No hay pedidos especiales para el período seleccionado.</div>
+              </div>
+              <div class="flex items-center justify-between pt-3 px-1 text-xs text-slate-400" id="pedidosPagination">
+                <span id="pedidosPageInfo">Mostrando 50 de 0</span>
+                <button id="loadMorePedidos" class="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-950 hover:text-white transition hidden">Cargar 50 más...</button>
+              </div>
+            </div>
+
+          </section>
+
+        </div>
+      </div>
+    </main>
+  </section>
+  <script src="app.js"></script>
+</body>
+</html>
