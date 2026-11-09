@@ -686,14 +686,8 @@
     e.target.value = '';
   };
 
-  if(!getUser()) $('loginError').textContent = 'Crea tu acceso local para comenzar.';
-})();
 
-
-
-
-
-document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', () => {
   const line1Text = "Registra, Analiza.";
   const line2Text = "Mejora.";
 
@@ -703,7 +697,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let i = 0;
   let j = 0;
 
-  // Velocidad de escritura en milisegundos por letra
   const speed = 75; 
 
   function typeWriter() {
@@ -720,3 +713,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   typeWriter();
 });
+
+
+  if(!getUser()) $('loginError').textContent = 'Crea tu acceso local para comenzar.';
+})();
