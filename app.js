@@ -689,3 +689,34 @@
   if(!getUser()) $('loginError').textContent = 'Crea tu acceso local para comenzar.';
 })();
 
+
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  const line1Text = "Registra, Analiza.";
+  const line2Text = "Mejora.";
+
+  const elLine1 = document.getElementById('typedLine1');
+  const elLine2 = document.getElementById('typedLine2');
+
+  let i = 0;
+  let j = 0;
+
+  // Velocidad de escritura en milisegundos por letra
+  const speed = 75; 
+
+  function typeWriter() {
+    if (i < line1Text.length) {
+      elLine1.textContent += line1Text.charAt(i);
+      i++;
+      setTimeout(typeWriter, speed);
+    } else if (j < line2Text.length) {
+      elLine2.textContent += line2Text.charAt(j);
+      j++;
+      setTimeout(typeWriter, speed);
+    }
+  }
+
+  typeWriter();
+});
