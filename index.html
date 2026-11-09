@@ -30,181 +30,154 @@
       }
     }
   </script>
-
   <style>
     @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes pulseSlow {
-  0%, 100% {
-    opacity: 0.15;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.25;
-    transform: scale(1.05);
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.35s ease-out forwards;
-}
-
-.animate-pulse-slow {
-  animation: pulseSlow 8s ease-in-out infinite;
-}
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulseSlow {
+      0%, 100% { opacity: 0.15; transform: scale(1); }
+      50% { opacity: 0.25; transform: scale(1.05); }
+    }
+    .animate-fade-in { animation: fadeIn 0.35s ease-out forwards; }
+    .animate-pulse-slow { animation: pulseSlow 8s ease-in-out infinite; }
   </style>
 </head>
 <body class="min-h-full flex flex-col font-sans bg-slate-950 text-slate-100 antialiased selection:bg-brand-400 selection:text-slate-950">
 
-
+  <!-- VISTA DE AUTENTICACIÓN -->
   <section id="authView" class="min-h-screen w-full grid grid-cols-1 lg:grid-cols-12 bg-slate-950 font-sans selection:bg-brand-400 selection:text-slate-950">
-  <aside class="hidden lg:flex lg:col-span-6 xl:col-span-7 flex-col justify-between p-12 xl:p-16 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-r border-slate-800/50 relative overflow-hidden">
-    <div class="absolute -top-40 -left-40 w-[500px] h-[500px] bg-brand-400/15 rounded-full blur-[128px] pointer-events-none animate-pulse-slow"></div>
-    <div class="absolute bottom-10 right-10 w-96 h-96 bg-brand-400/5 rounded-full blur-[96px] pointer-events-none"></div>
-    <div class="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none"></div>
+    <aside class="hidden lg:flex lg:col-span-6 xl:col-span-7 flex-col justify-between p-12 xl:p-16 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-r border-slate-800/50 relative overflow-hidden">
+      <div class="absolute -top-40 -left-40 w-[500px] h-[500px] bg-brand-400/15 rounded-full blur-[128px] pointer-events-none animate-pulse-slow"></div>
+      <div class="absolute bottom-10 right-10 w-96 h-96 bg-brand-400/5 rounded-full blur-[96px] pointer-events-none"></div>
+      <div class="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none"></div>
 
-    <a class="flex items-center gap-3.5 text-2xl font-black tracking-tight text-white z-10 group w-fit" href="#">
-      <span class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-500 to-brand-400 text-slate-950 grid place-items-center font-black text-xl shadow-lg shadow-brand-400/25 group-hover:scale-105 transition-transform duration-300">
-        C
-      </span>
-      <span class="bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-        otizaciones
-      </span>
-    </a>
-
-    <div class="max-w-2xl my-auto py-12 z-10 space-y-6">
-      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-400/10 border border-brand-400/20 backdrop-blur-md">
-        <span class="w-2 h-2 rounded-full bg-brand-400 animate-ping"></span>
-        <span class="text-xs font-bold tracking-widest uppercase text-brand-400">Espacio de trabajo</span>
-      </div>
-
-      <h1 class="text-5xl xl:text-7xl font-extrabold tracking-tight text-white leading-[1.1] min-h-[2.4em]">
-  <span id="typedLine1"></span><br>
-  <span id="typedLine2" class="bg-gradient-to-r from-brand-400 via-emerald-300 to-brand-500 bg-clip-text text-transparent"></span><span class="animate-pulse text-brand-400">|</span>
-</h1>
-
-      <p class="text-slate-400 text-lg leading-relaxed max-w-xl font-normal">
-        Control diario, pequeño sistema para sustituir el proceso manual de las cotizaciones en excel.
-      </p>
-    </div>
-
-    <!-- Footer de Aside -->
-    <div class="flex items-center gap-2 text-xs font-medium text-slate-500 z-10">
-      <span class="inline-block w-2 h-2 rounded-full bg-slate-700"></span>
-      <span>Blurryface</span>
-      <span>·</span>
-      <span>Aplicación local</span>
-    </div>
-  </aside>
-
-  <!-- Panel Derecho Formulario -->
-  <main class="lg:col-span-6 xl:col-span-5 flex items-center justify-center p-6 sm:p-12 lg:p-16 bg-slate-950/80 backdrop-blur-xl w-full relative">
-    <div class="w-full max-w-md space-y-8 relative z-10">
-      
-      <!-- Login Form View -->
-      <div id="loginForm" class="space-y-6 animate-fade-in">
-        <div class="space-y-2">
-          <span class="text-xs font-bold tracking-widest uppercase text-brand-400/90 block">Bienvenido de nuevo</span>
-          <h2 class="text-3xl font-extrabold tracking-tight text-white">Inicia sesión</h2>
-        </div>
-
-        <form id="doLogin" class="space-y-5">
-          <div class="space-y-2">
-            <label for="loginUser" class="block text-xs font-semibold text-slate-300 tracking-wide">Usuario</label>
-            <div class="relative">
-              <input id="loginUser" autocomplete="username" required placeholder="Tu usuario" class="w-full bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20 transition-all duration-200 shadow-inner">
-            </div>
-          </div>
-
-          <div class="space-y-2">
-            <label for="loginPin" class="block text-xs font-semibold text-slate-300 tracking-wide">Contraseña / PIN</label>
-            <div class="relative">
-              <input id="loginPin" type="password" autocomplete="current-password" required placeholder="Tu contraseña" class="w-full bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20 transition-all duration-200 shadow-inner">
-            </div>
-          </div>
-
-          <button class="w-full mt-3 py-4 px-4 bg-gradient-to-r from-brand-400 to-brand-500 hover:from-brand-300 hover:to-brand-400 text-slate-950 font-bold rounded-xl transition-all duration-200 shadow-lg shadow-brand-400/20 hover:shadow-brand-400/30 active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2 group" type="submit">
-            <span>Entrar</span>
-            <span class="group-hover:translate-x-1 transition-transform duration-200">→</span>
-          </button>
-
-          <div class="text-red-400 text-xs font-medium min-h-[1.25rem] transition-all" id="loginError"></div>
-        </form>
-
-        <div class="pt-2 text-center text-sm text-slate-400 border-t border-slate-800/60">
-          ¿Es tu primera vez? 
-          <button class="text-brand-400 font-bold hover:text-brand-300 hover:underline bg-transparent border-0 p-0 ml-1 cursor-pointer transition-colors" id="showRegister">
-            Crear acceso local
-          </button>
-        </div>
-      </div>
-
-      <!-- Register Form View -->
-      <div id="registerForm" class="hidden space-y-6 animate-fade-in">
-        <div class="space-y-2">
-          <span class="text-xs font-bold tracking-widest uppercase text-brand-400/90 block">Configuración inicial</span>
-          <h2 class="text-3xl font-extrabold tracking-tight text-white">Crea tu acceso</h2>
-        </div>
-
-        <form id="doRegister" class="space-y-4">
-          <div class="space-y-1.5">
-            <label for="newUser" class="block text-xs font-semibold text-slate-300 tracking-wide">Usuario</label>
-            <input id="newUser" required minlength="3" autocomplete="username" class="w-full bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20 transition-all duration-200 shadow-inner">
-          </div>
-
-          <div class="space-y-1.5">
-            <label for="newPin" class="block text-xs font-semibold text-slate-300 tracking-wide">Contraseña / PIN</label>
-            <input id="newPin" type="password" required minlength="4" class="w-full bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20 transition-all duration-200 shadow-inner">
-          </div>
-
-          <div class="space-y-1.5">
-            <label for="confirmPin" class="block text-xs font-semibold text-slate-300 tracking-wide">Confirmar contraseña</label>
-            <input id="confirmPin" type="password" required minlength="4" class="w-full bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20 transition-all duration-200 shadow-inner">
-          </div>
-
-          <button class="w-full mt-3 py-4 px-4 bg-gradient-to-r from-brand-400 to-brand-500 hover:from-brand-300 hover:to-brand-400 text-slate-950 font-bold rounded-xl transition-all duration-200 shadow-lg shadow-brand-400/20 hover:shadow-brand-400/30 active:scale-[0.99] cursor-pointer" type="submit">
-            Crear acceso
-          </button>
-
-          <div class="text-red-400 text-xs font-medium min-h-[1.25rem] transition-all" id="registerError"></div>
-        </form>
-
-        <div class="pt-2 text-center text-sm text-slate-400 border-t border-slate-800/60">
-          <button class="text-brand-400 font-bold hover:text-brand-300 hover:underline bg-transparent border-0 p-0 cursor-pointer transition-colors" id="showLogin">
-            Volver a iniciar sesión
-          </button>
-        </div>
-      </div>
-
-    </div>
-  </main>
-</section>
-
-  <!-- VISTA DE APLICACIÓN PRINCIPAL -->
-  <section class="hidden min-h-screen w-full flex flex-col bg-slate-950" id="appView">
-    <header class="w-full h-16 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md px-4 sm:px-8 flex items-center justify-between sticky top-0 z-50">
-      <a class="flex items-center gap-2.5 text-xl font-black tracking-tight text-white" href="#">
-        <span class="w-8 h-8 rounded-lg bg-brand-400 text-slate-950 grid place-items-center font-black text-base">C</span><span>otizaciones</span>
+      <a class="flex items-center gap-3.5 text-2xl font-black tracking-tight text-white z-10 group w-fit" href="#">
+        <span class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-500 to-brand-400 text-slate-950 grid place-items-center font-black text-xl shadow-lg shadow-brand-400/25 group-hover:scale-105 transition-transform duration-300">C</span>
+        <span class="bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">otizaciones</span>
       </a>
-      <div class="flex items-center gap-3 text-slate-300 text-sm">
-        <span id="welcomeUser" class="font-medium">Usuario</span>
-        <span class="w-8 h-8 rounded-full bg-emerald-950 text-brand-400 border border-brand-400/30 flex items-center justify-center font-bold text-xs" id="userInitial">U</span>
-        <button class="px-3 py-1.5 rounded-lg border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white text-xs font-semibold transition" id="logout">Salir</button>
-      </div>
-    </header>
 
-    <main class="w-full flex-1 p-4 sm:p-6 lg:p-8 flex flex-col justify-between">
-      <div class="w-full space-y-6">
+      <div class="max-w-2xl my-auto py-12 z-10 space-y-6">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-400/10 border border-brand-400/20 backdrop-blur-md">
+          <span class="w-2 h-2 rounded-full bg-brand-400 animate-ping"></span>
+          <span class="text-xs font-bold tracking-widest uppercase text-brand-400">Espacio de trabajo</span>
+        </div>
+
+        <h1 class="text-5xl xl:text-7xl font-extrabold tracking-tight text-white leading-[1.1] min-h-[2.4em]">
+          <span id="typedLine1"></span><br>
+          <span id="typedLine2" class="bg-gradient-to-r from-brand-400 via-emerald-300 to-brand-500 bg-clip-text text-transparent"></span><span class="animate-pulse text-brand-400">|</span>
+        </h1>
+
+        <p class="text-slate-400 text-lg leading-relaxed max-w-xl font-normal">
+          Control diario, pequeño sistema para sustituir el proceso manual de las cotizaciones en excel.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2 text-xs font-medium text-slate-500 z-10">
+        <span class="inline-block w-2 h-2 rounded-full bg-slate-700"></span>
+        <span>Blurryface</span><span>·</span><span>Aplicación local</span>
+      </div>
+    </aside>
+
+    <main class="lg:col-span-6 xl:col-span-5 flex items-center justify-center p-6 sm:p-12 lg:p-16 bg-slate-950/80 backdrop-blur-xl w-full relative">
+      <div class="w-full max-w-md space-y-8 relative z-10">
+        <div id="loginForm" class="space-y-6 animate-fade-in">
+          <div class="space-y-2">
+            <span class="text-xs font-bold tracking-widest uppercase text-brand-400/90 block">Bienvenido de nuevo</span>
+            <h2 class="text-3xl font-extrabold tracking-tight text-white">Inicia sesión</h2>
+          </div>
+          <form id="doLogin" class="space-y-4">
+            <div>
+              <label for="loginUser" class="block text-xs font-semibold text-slate-300 mb-2">Usuario</label>
+              <input id="loginUser" autocomplete="username" required placeholder="Tu usuario" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-400">
+            </div>
+            <div>
+              <label for="loginPin" class="block text-xs font-semibold text-slate-300 mb-2">Contraseña / PIN</label>
+              <input id="loginPin" type="password" autocomplete="current-password" required placeholder="Tu contraseña" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-400">
+            </div>
+            <button class="w-full mt-2 py-3.5 px-4 bg-brand-400 text-slate-950 font-bold rounded-xl transition hover:bg-emerald-400 shadow-lg shadow-brand-400/20" type="submit">Entrar →</button>
+            <div class="text-red-400 text-xs min-h-[1.25rem]" id="loginError"></div>
+          </form>
+          <div class="text-center text-sm text-slate-400">
+            ¿Es tu primera vez? <button class="text-brand-400 font-bold hover:underline bg-transparent border-0 p-0 cursor-pointer" id="showRegister">Crear acceso local</button>
+          </div>
+        </div>
+
+        <div id="registerForm" class="hidden space-y-6 animate-fade-in">
+          <div class="space-y-2">
+            <span class="text-xs font-bold tracking-widest uppercase text-brand-400/90 block">Configuración inicial</span>
+            <h2 class="text-3xl font-extrabold tracking-tight text-white">Crea tu acceso</h2>
+          </div>
+          <form id="doRegister" class="space-y-4">
+            <div>
+              <label for="newUser" class="block text-xs font-semibold text-slate-300 mb-2">Usuario</label>
+              <input id="newUser" required minlength="3" autocomplete="username" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-400">
+            </div>
+            <div>
+              <label for="newPin" class="block text-xs font-semibold text-slate-300 mb-2">Contraseña / PIN</label>
+              <input id="newPin" type="password" required minlength="4" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-400">
+            </div>
+            <div>
+              <label for="confirmPin" class="block text-xs font-semibold text-slate-300 mb-2">Confirmar contraseña</label>
+              <input id="confirmPin" type="password" required minlength="4" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-400">
+            </div>
+            <button class="w-full mt-2 py-3.5 px-4 bg-brand-400 text-slate-950 font-bold rounded-xl transition hover:bg-emerald-400 shadow-lg shadow-brand-400/20" type="submit">Crear acceso</button>
+            <div class="text-red-400 text-xs min-h-[1.25rem]" id="registerError"></div>
+          </form>
+          <div class="text-center text-sm text-slate-400">
+            <button class="text-brand-400 font-bold hover:underline bg-transparent border-0 p-0 cursor-pointer" id="showLogin">Volver a iniciar sesión</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </section>
+
+  <!-- VISTA PRINCIPAL CON SIDEBAR COLAPSABLE -->
+  <section class="hidden min-h-screen w-full flex flex-col lg:flex-row bg-slate-950 relative" id="appView">
+    
+    <!-- Botón hamburguesa en móvil -->
+    <button id="mobileToggle" class="lg:hidden absolute top-4 left-4 z-50 p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-brand-400 shadow-lg">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+
+    <!-- Sidebar Lateral -->
+    <aside id="sidebar" class="w-64 bg-slate-900/90 border-r border-slate-800/80 p-4 flex flex-col justify-between shrink-0 transition-all duration-300 fixed lg:static inset-y-0 left-0 z-40 -translate-x-full lg:translate-x-0">
+      <div class="space-y-6">
+        <div class="flex items-center justify-between px-2 py-1">
+          <div class="flex items-center gap-2.5 text-xl font-black tracking-tight text-white sidebar-text">
+            <span class="w-8 h-8 rounded-lg bg-brand-400 text-slate-950 grid place-items-center font-black text-base">C</span>
+            <span>Otizaciones</span>
+          </div>
+          <button id="collapseBtn" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+          </button>
+        </div>
         
+        <nav class="space-y-1.5">
+          <button id="navDashboard" title="Operaciones & Historial" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-brand-400 bg-brand-400/10 border border-brand-400/30 transition text-left">
+            📊 <span class="sidebar-text">Operaciones & Historial</span>
+          </button>
+          <button id="navMl" title="Links de Mercado Libre" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/50 transition text-left">
+            🔗 <span class="sidebar-text">Links de Mercado Libre</span>
+          </button>
+        </nav>
+      </div>
+
+      <div class="pt-4 border-t border-slate-800/80 flex items-center justify-between">
+        <div class="flex items-center gap-2 text-xs text-slate-300 overflow-hidden sidebar-text">
+          <span class="w-7 h-7 rounded-full bg-emerald-950 text-brand-400 border border-brand-400/30 flex items-center justify-center font-bold text-xs shrink-0" id="userInitial">U</span>
+          <span id="welcomeUser" class="font-medium truncate max-w-[90px]">Usuario</span>
+        </div>
+        <button class="px-2.5 py-1 rounded-lg border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white text-xs font-semibold transition shrink-0" id="logout">Salir</button>
+      </div>
+    </aside>
+
+    <div id="sidebarOverlay" class="fixed inset-0 bg-slate-950/70 z-30 hidden lg:hidden"></div>
+
+    <main class="flex-1 flex flex-col overflow-y-auto lg:pl-0 pt-16 lg:pt-0">
+      
+      <!-- VISTA 1: DASHBOARD -->
+      <div id="viewDashboard" class="w-full p-4 sm:p-6 lg:p-8 space-y-6">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-800/50">
           <div>
             <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Registro de Operaciones</h1>
@@ -212,14 +185,14 @@
           </div>
           <div class="flex items-center gap-2.5 flex-wrap">
             <button class="px-3.5 py-2 rounded-xl border border-slate-700 hover:border-slate-500 text-slate-200 text-xs font-semibold transition bg-slate-900/40" id="exportBtn">↓ Exportar</button>
-            <button class="px-3.5 py-2 rounded-xl border border-brand-400/40 bg-brand-400/10 text-brand-400 hover:bg-brand-400/20 text-xs font-bold transition" id="exportExcelBtn">Exportar Excel (CSV)</button>
+            <button class="px-3.5 py-2 rounded-xl border border-brand-400/40 bg-brand-400/10 text-brand-400 hover:bg-brand-400/20 text-xs font-bold transition" id="exportExcelBtn">Exportar Excel</button>
             <button class="px-3.5 py-2 rounded-xl border border-rose-500/40 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 text-xs font-semibold transition" id="purgeBtn">🧹 Purgar Histórico</button>
             <label class="px-3.5 py-2 rounded-xl border border-slate-700 hover:border-slate-500 text-slate-200 text-xs font-semibold transition bg-slate-900/40 cursor-pointer" for="importFile">↑ Importar</label>
-            <input id="importFile" type="file" accept="application/json" class="hidden">
+            <!-- Atributo multiple agregado para permitir seleccionar varios archivos a la vez -->
+            <input id="importFile" type="file" accept="application/json" multiple class="hidden">
           </div>
         </div>
 
-        <!-- Estadísticas Rápidas del Día -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800/80">
             <small class="text-slate-400 text-xs font-medium block">Cotizaciones de Hoy</small>
@@ -237,11 +210,9 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
-          <!-- Panel Izquierdo: Formulario -->
           <section class="lg:col-span-4 p-5 sm:p-6 rounded-2xl bg-slate-900/70 border border-slate-800/80 shadow-sm">
             <h3 class="text-base font-bold text-white mb-4 flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-brand-400"></span>
-              Nueva operación
+              <span class="w-2 h-2 rounded-full bg-brand-400"></span> Nueva operación
             </h3>
             <form id="entryForm" class="space-y-4">
               <div>
@@ -262,15 +233,13 @@
                 <input id="key" required placeholder="" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-brand-400">
               </div>
 
-              <!-- Cotización -->
               <div id="cotizacionFields" class="space-y-4">
                 <div>
                   <label for="minutes" class="block text-xs font-semibold text-slate-300 mb-1.5">Tiempo empleado (minutos)</label>
-                  <input id="minutes" type="number" min="0.1" step="0.1" placeholder="" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-400">
+                  <input id="minutes" type="number" min="" step="0.1" placeholder="" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-400">
                 </div>
               </div>
 
-              <!-- Pedido Especial -->
               <div id="pedidoFields" class="space-y-4 hidden">
                 <div>
                   <label for="description" class="block text-xs font-semibold text-slate-300 mb-1.5">Descripción</label>
@@ -281,8 +250,8 @@
                   <input id="supplier" placeholder="" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-brand-400">
                 </div>
                 <div>
-                  <label for="arrivalDate" class="block text-xs font-semibold text-slate-300 mb-1.5">¿Fecha llegada?</label>
-                  <input type="text" id="arrivalDate" readonly placeholder="" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white cursor-pointer focus:outline-none">
+                  <label for="arrivalDate" class="block text-xs font-semibold text-slate-300 mb-1.5">¿Cuándo llega?</label>
+                  <input type="text" id="arrivalDate" readonly placeholder="Selecciona fecha" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white cursor-pointer focus:outline-none">
                 </div>
                 <div>
                   <label for="responsible" class="block text-xs font-semibold text-slate-300 mb-1.5">Responsable del pedido</label>
@@ -303,13 +272,12 @@
                 <input type="text" id="rangePicker" readonly placeholder="Filtrar por rango de fecha" class="bg-transparent text-xs text-slate-200 focus:outline-none cursor-pointer min-w-[200px]">
               </div>
               <div class="flex items-center gap-2">
-                <button id="weeklySummaryBtn" class="px-3.5 py-2 rounded-xl border border-brand-400/40 bg-brand-400/10 text-brand-400 hover:bg-brand-400/20 text-xs font-bold transition">Generar Reporte</button>
+                <button id="weeklySummaryBtn" class="px-3.5 py-2 rounded-xl border border-brand-400/40 bg-brand-400/10 text-brand-400 hover:bg-brand-400/20 text-xs font-bold transition">Reporte</button>
                 <button id="clearFilters" class="text-xs text-slate-400 hover:text-white px-2 py-1 font-semibold">Ver solo Hoy</button>
               </div>
             </div>
 
             <div id="weeklySection" class="hidden p-5 sm:p-6 rounded-2xl bg-slate-900/90 border border-brand-400/30 shadow-lg space-y-5">
-
               <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
                 <div>
                   <span class="text-xs font-bold tracking-widest uppercase text-brand-400"></span>
@@ -319,28 +287,23 @@
                   </div>
                 </div>
                 <div class="flex items-center gap-2" data-html2canvas-ignore="true">
-                  <button id="downloadReportImg" class="px-3.5 py-2 rounded-xl bg-brand-400 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition shadow-md flex items-center gap-1.5">
-                    Descargar
-                  </button>
-                  <button id="closeWeekly" class="text-slate-400 hover:text-white text-xs font-semibold px-3 py-2 rounded-xl border border-slate-800 bg-slate-950 transition">
-                    Cerrar
-                  </button>
+                  <button id="downloadReportImg" class="px-3.5 py-2 rounded-xl bg-brand-400 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition shadow-md">Descargar</button>
+                  <button id="closeWeekly" class="text-slate-400 hover:text-white text-xs font-semibold px-3 py-2 rounded-xl border border-slate-800 bg-slate-950 transition">Cerrar</button>
                 </div>
               </div>
 
               <div id="weeklyReportCapture" class="space-y-5 p-2 bg-slate-900 rounded-xl">
-                
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
-                    <span class="text-slate-400 text-[11px] block">Total Cotizaciones (Período)</span>
+                    <span class="text-slate-400 text-[11px] block">Total Cotizaciones</span>
                     <strong id="weekTotalCount" class="text-xl font-black text-white mt-1 block">0</strong>
                   </div>
                   <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
-                    <span class="text-slate-400 text-[11px] block">Tiempo Promedio del Período</span>
+                    <span class="text-slate-400 text-[11px] block">Tiempo Promedio</span>
                     <strong id="weekAvgTime" class="text-xl font-black text-brand-400 mt-1 block">0 min</strong>
                   </div>
                   <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
-                    <span class="text-slate-400 text-[11px] block">Media</span>
+                    <span class="text-slate-400 text-[11px] block">Mediana</span>
                     <strong id="weekMedianTime" class="text-xl font-black text-white mt-1 block">0 min</strong>
                   </div>
                 </div>
@@ -355,49 +318,46 @@
                       <tr class="bg-slate-950/90 border-b border-slate-800 text-slate-400 uppercase font-semibold text-[11px] tracking-wider">
                         <th class="p-3">Día</th>
                         <th class="p-3">Fecha</th>
-                        <th class="p-3">Claves y Tiempos Individuales</th>
-                        <th class="p-3 text-right">Promedio del Día</th>
+                        <th class="p-3">Claves y Tiempos</th>
+                        <th class="p-3 text-right">Promedio Día</th>
                       </tr>
                     </thead>
                     <tbody id="weeklyCotizBody" class="divide-y divide-slate-800/60 bg-slate-900/30"></tbody>
                   </table>
-                  <div id="emptyWeekly" class="text-center text-slate-500 py-6 text-xs font-medium">No hay cotizaciones registradas en este rango de fechas.</div>
+                  <div id="emptyWeekly" class="text-center text-slate-500 py-6 text-xs font-medium">No hay cotizaciones registradas en este rango.</div>
                 </div>
-
               </div>
-
             </div>
 
+            <!-- TABLA 1: COTIZACIONES (Paginación de 10) -->
             <div class="p-5 sm:p-6 rounded-2xl bg-slate-900/70 border border-slate-800/80 shadow-sm flex flex-col">
-              <h3 class="text-base font-bold text-white mb-4 flex items-center justify-between">
-                <span>Historial de Cotizaciones</span>
-              </h3>
+              <h3 class="text-base font-bold text-white mb-4">Historial de Cotizaciones</h3>
               <div class="w-full overflow-x-auto rounded-xl border border-slate-800">
                 <table class="w-full text-left text-xs border-collapse min-w-[500px]">
                   <thead>
                     <tr class="bg-slate-950/80 border-b border-slate-800 text-slate-400 uppercase font-semibold text-[11px] tracking-wider">
                       <th class="p-3.5">Fecha</th>
                       <th class="p-3.5">Clave</th>
-                      <th class="p-3.5">Tiempo de Cotización</th>
+                      <th class="p-3.5">Tiempo</th>
                       <th class="p-3.5 text-right">Acción</th>
                     </tr>
                   </thead>
                   <tbody id="cotizBody" class="divide-y divide-slate-800/60 bg-slate-900/30"></tbody>
                 </table>
-                <div id="emptyCotiz" class="text-center text-slate-500 py-8 text-sm font-medium">No hay cotizaciones para el período seleccionado.</div>
+                <div id="emptyCotiz" class="text-center text-slate-500 py-8 text-sm font-medium">No hay cotizaciones para el período.</div>
               </div>
-              
-              <div class="flex items-center justify-between pt-3 px-1 text-xs text-slate-400" id="cotizPagination">
-                <span id="cotizPageInfo">Mostrando 50 de 0</span>
-                <button id="loadMoreCotiz" class="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-950 hover:text-white transition hidden">Cargar 50 más...</button>
+              <div class="flex items-center justify-between pt-3 px-1 text-xs text-slate-400">
+                <span id="cotizPageInfo">Página 1 de 1</span>
+                <div class="flex items-center gap-1.5">
+                  <button id="prevCotiz" class="px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-950 hover:text-white transition disabled:opacity-30 disabled:cursor-not-allowed">Anterior</button>
+                  <button id="nextCotiz" class="px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-950 hover:text-white transition disabled:opacity-30 disabled:cursor-not-allowed">Siguiente</button>
+                </div>
               </div>
             </div>
 
-            <!-- TABLA 2: PEDIDOS ESPECIALES -->
+            <!-- TABLA 2: PEDIDOS ESPECIALES (Paginación de 10 - F. Pedido antes de Llegada) -->
             <div class="p-5 sm:p-6 rounded-2xl bg-slate-900/70 border border-slate-800/80 shadow-sm flex flex-col">
-              <h3 class="text-base font-bold text-white mb-4 flex items-center justify-between">
-                <span>Historial de Pedidos Especiales</span>
-              </h3>
+              <h3 class="text-base font-bold text-white mb-4">Historial de Pedidos Especiales</h3>
               <div class="w-full overflow-x-auto rounded-xl border border-slate-800">
                 <table class="w-full text-left text-xs border-collapse min-w-[750px]">
                   <thead>
@@ -406,28 +366,118 @@
                       <th class="p-3.5">Descripción</th>
                       <th class="p-3.5">Proveedor</th>
                       <th class="p-3.5 text-center">Atendido</th>
-                      <th class="p-3.5">F.Pedido</th>
-                      <th class="p-3.5">¿Fecha llega?</th>
+                      <th class="p-3.5">F. Pedido</th>
+                      <th class="p-3.5">Llegada</th>
                       <th class="p-3.5">Responsable</th>
                       <th class="p-3.5 text-right">Acción</th>
                     </tr>
                   </thead>
                   <tbody id="pedidosBody" class="divide-y divide-slate-800/60 bg-slate-900/30"></tbody>
                 </table>
-                <div id="emptyPedidos" class="text-center text-slate-500 py-8 text-sm font-medium">No hay pedidos especiales para el período seleccionado.</div>
+                <div id="emptyPedidos" class="text-center text-slate-500 py-8 text-sm font-medium">No hay pedidos especiales para el período.</div>
               </div>
-              <div class="flex items-center justify-between pt-3 px-1 text-xs text-slate-400" id="pedidosPagination">
-                <span id="pedidosPageInfo">Mostrando 50 de 0</span>
-                <button id="loadMorePedidos" class="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-950 hover:text-white transition hidden">Cargar 50 más...</button>
+              <div class="flex items-center justify-between pt-3 px-1 text-xs text-slate-400">
+                <span id="pedidosPageInfo">Página 1 de 1</span>
+                <div class="flex items-center gap-1.5">
+                  <button id="prevPedidos" class="px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-950 hover:text-white transition disabled:opacity-30 disabled:cursor-not-allowed">Anterior</button>
+                  <button id="nextPedidos" class="px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-950 hover:text-white transition disabled:opacity-30 disabled:cursor-not-allowed">Siguiente</button>
+                </div>
               </div>
             </div>
 
           </section>
+        </div>
+      </div>
+
+      <!-- VISTA 2: MERCADO LIBRE (Paginación de 10) -->
+      <div id="viewMl" class="w-full p-4 sm:p-6 lg:p-8 space-y-6 hidden">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-800/50">
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Links de Mercado Libre</h1>
+            <p class="text-slate-400 text-xs sm:text-sm mt-1">Administra tus publicaciones y enlaces de forma independiente.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          <div class="lg:col-span-4 p-5 sm:p-6 rounded-2xl bg-slate-900/70 border border-slate-800/80 shadow-sm">
+            <h3 class="text-base font-bold text-white mb-4 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-sky-400"></span> Nuevo enlace ML
+            </h3>
+            <form id="mlForm" class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1.5">Enlace de Mercado Libre (URL)</label>
+                <input id="mlUrlInput" type="url" required placeholder="https://articulo.mercadolibre.com.mx/..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-sky-400">
+              </div>
+              <button class="w-full py-3 px-4 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs rounded-xl transition shadow-md mt-2" type="submit">Guardar enlace</button>
+            </form>
+          </div>
+
+          <div class="lg:col-span-8 p-5 sm:p-6 rounded-2xl bg-slate-900/70 border border-slate-800/80 shadow-sm flex flex-col">
+            <h3 class="text-base font-bold text-white mb-4">Historial de Enlaces ML</h3>
+            <div class="w-full overflow-x-auto rounded-xl border border-slate-800">
+              <table class="w-full text-left text-xs border-collapse min-w-[500px]">
+                <thead>
+                  <tr class="bg-slate-950/80 border-b border-slate-800 text-slate-400 uppercase font-semibold text-[11px] tracking-wider">
+                    <th class="p-3.5">Fecha</th>
+                    <th class="p-3.5">Enlace</th>
+                    <th class="p-3.5 text-right">Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="mlTableBody" class="divide-y divide-slate-800/60 bg-slate-900/30"></tbody>
+              </table>
+              <div id="emptyMlView" class="text-center text-slate-500 py-8 text-sm font-medium">No hay links de Mercado Libre registrados.</div>
+            </div>
+            <div class="flex items-center justify-between pt-3 px-1 text-xs text-slate-400">
+              <span id="mlViewPageInfo">Página 1 de 1</span>
+              <div class="flex items-center gap-1.5">
+                <button id="prevMl" class="px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-950 hover:text-white transition disabled:opacity-30 disabled:cursor-not-allowed">Anterior</button>
+                <button id="nextMl" class="px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-950 hover:text-white transition disabled:opacity-30 disabled:cursor-not-allowed">Siguiente</button>
+              </div>
+            </div>
+          </div>
 
         </div>
       </div>
+
     </main>
   </section>
+
+  <!-- Script de Animación Typewriter -->
+  <script>
+    (function() {
+      const line1Text = "Autopartes, Toro";
+      const line2Text = " Dept. Cotizaciones.";
+      const typingSpeed = 100, erasingSpeed = 60, pauseTime = 2000;
+
+      function iniciarEfectoTypewriter() {
+        const elLine1 = document.getElementById('typedLine1');
+        const elLine2 = document.getElementById('typedLine2');
+        if (!elLine1 || !elLine2) return;
+
+        let i = 0, j = 0, isDeleting = false;
+        function loop() {
+          if (!isDeleting && i <= line1Text.length) {
+            elLine1.textContent = line1Text.substring(0, i); i++; setTimeout(loop, typingSpeed);
+          } else if (!isDeleting && j <= line2Text.length) {
+            elLine2.textContent = line2Text.substring(0, j); j++; setTimeout(loop, typingSpeed);
+          } else if (!isDeleting && i > line1Text.length && j > line2Text.length) {
+            isDeleting = true; setTimeout(loop, pauseTime);
+          } else if (isDeleting && j > 0) {
+            j--; elLine2.textContent = line2Text.substring(0, j); setTimeout(loop, erasingSpeed);
+          } else if (isDeleting && i > 0) {
+            i--; elLine1.textContent = line1Text.substring(0, i); setTimeout(loop, erasingSpeed);
+          } else if (isDeleting && i === 0 && j === 0) {
+            isDeleting = false; setTimeout(loop, 500);
+          }
+        }
+        loop();
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciarEfectoTypewriter);
+      else iniciarEfectoTypewriter();
+    })();
+  </script>
+
   <script src="app.js"></script>
 </body>
 </html>

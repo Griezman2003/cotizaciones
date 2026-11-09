@@ -5,11 +5,14 @@
   let weeklyChartInstance = null;
   let reportRangePicker = null;
   
-  // Control de paginación (Lazy Loading)
-  let cotizLimit = 50;
-  let pedidosLimit = 50;
+  // Paginación fija de máximo 10 elementos por página
+  const PAGE_SIZE = 10;
+  let cotizPage = 1;
+  let pedidosPage = 1;
+  let mlPage = 1;
 
-  // Obtener fecha local exacta de México sin desfases UTC
+  let isSidebarCollapsed = false;
+
   const getLocalDateString = (d = new Date()) => {
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -24,21 +27,14 @@
   let reportStart = todayStr;
   let reportEnd = todayStr;
 
-  const operationDatePicker = flatpickr("#operationDate", { 
-    locale: "es", defaultDate: todayStr, dateFormat: "Y-m-d" 
-  });
+  const operationDatePicker = flatpickr("#operationDate", { locale: "es", defaultDate: todayStr, dateFormat: "Y-m-d" });
   operationDatePicker.setDate(todayStr, true);
   
-  const arrivalDatePicker = flatpickr("#arrivalDate", { 
-    locale: "es", defaultDate: todayStr, dateFormat: "Y-m-d" 
-  });
+  const arrivalDatePicker = flatpickr("#arrivalDate", { locale: "es", defaultDate: todayStr, dateFormat: "Y-m-d" });
   arrivalDatePicker.setDate(todayStr, true);
   
   const rangePicker = flatpickr("#rangePicker", {
-    mode: "range",
-    locale: "es",
-    dateFormat: "Y-m-d",
-    defaultDate: [todayStr, todayStr], 
+    mode: "range", locale: "es", dateFormat: "Y-m-d", defaultDate: [todayStr, todayStr], 
     onClose: function(selectedDates, dateStr, instance) {
       if (selectedDates.length === 2) {
         startDateFilter = instance.formatDate(selectedDates[0], "Y-m-d");
@@ -47,21 +43,16 @@
         startDateFilter = instance.formatDate(selectedDates[0], "Y-m-d");
         endDateFilter = startDateFilter;
       } else {
-        startDateFilter = '';
-        endDateFilter = '';
+        startDateFilter = ''; endDateFilter = '';
       }
-      cotizLimit = 50;
-      pedidosLimit = 50;
+      cotizPage = 1; pedidosPage = 1;
       render();
     }
   });
   rangePicker.setDate([todayStr, todayStr], true);
 
   reportRangePicker = flatpickr("#reportRangeSelector", {
-    mode: "range",
-    locale: "es",
-    dateFormat: "Y-m-d",
-    defaultDate: [todayStr, todayStr],
+    mode: "range", locale: "es", dateFormat: "Y-m-d", defaultDate: [todayStr, todayStr],
     onChange: function(selectedDates, dateStr, instance) {
       if (selectedDates.length === 2) {
         reportStart = instance.formatDate(selectedDates[0], "Y-m-d");
@@ -77,60 +68,88 @@
     }
   });
 
-  $('type').onchange = (e) => {
-    const val = e.target.value;
-    if (val === 'Cotización') {
-      $('cotizacionFields').classList.remove('hidden');
-      $('pedidoFields').classList.add('hidden');
-      $('minutes').required = true;
-      $('description').required = false;
-      $('supplier').required = false;
-      $('responsible').required = false;
+  // Sidebar Colapsable
+  const sidebar = $('sidebar');
+  const overlay = $('sidebarOverlay');
+
+  $('collapseBtn').onclick = () => {
+    isSidebarCollapsed = !isSidebarCollapsed;
+    if (window.innerWidth >= 1024) {
+      if (isSidebarCollapsed) {
+        sidebar.classList.remove('w-64'); sidebar.classList.add('w-20');
+        document.querySelectorAll('.sidebar-text').forEach(el => el.classList.add('hidden'));
+      } else {
+        sidebar.classList.remove('w-20'); sidebar.classList.add('w-64');
+        document.querySelectorAll('.sidebar-text').forEach(el => el.classList.remove('hidden'));
+      }
     } else {
-      $('cotizacionFields').classList.add('hidden');
-      $('pedidoFields').classList.remove('hidden');
-      $('minutes').required = false;
-      $('description').required = true;
-      $('supplier').required = true;
-      $('responsible').required = true;
+      sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden');
     }
   };
 
+  $('mobileToggle').onclick = () => { sidebar.classList.remove('-translate-x-full'); overlay.classList.remove('hidden'); };
+  overlay.onclick = () => { sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden'); };
+
+  $('navDashboard').onclick = () => {
+    $('viewDashboard').classList.remove('hidden'); $('viewMl').classList.add('hidden');
+    $('navDashboard').className = "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-brand-400 bg-brand-400/10 border border-brand-400/30 transition text-left";
+    $('navMl').className = "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/50 transition text-left";
+    if (window.innerWidth < 1024) { sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden'); }
+  };
+
+  $('navMl').onclick = () => {
+    $('viewMl').classList.remove('hidden'); $('viewDashboard').classList.add('hidden');
+    $('navMl').className = "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-sky-400 bg-sky-400/10 border border-sky-400/30 transition text-left";
+    $('navDashboard').className = "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/50 transition text-left";
+    renderMlView();
+    if (window.innerWidth < 1024) { sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden'); }
+  };
+
+  $('type').onchange = (e) => {
+    const val = e.target.value;
+    $('cotizacionFields').classList.toggle('hidden', val !== 'Cotización');
+    $('pedidoFields').classList.toggle('hidden', val !== 'Pedido especial');
+    $('minutes').required = (val === 'Cotización');
+    $('description').required = (val === 'Pedido especial');
+    $('supplier').required = (val === 'Pedido especial');
+    $('responsible').required = (val === 'Pedido especial');
+  };
+
   const getUser = () => { try { return JSON.parse(localStorage.getItem(KEYS.user)); } catch { return null; } };
-  const getRecords = () => { try { const x=JSON.parse(localStorage.getItem(KEYS.records)||'[]'); return Array.isArray(x)?x:[]; } catch { return []; } };
+  const getRecords = () => { try { const x = JSON.parse(localStorage.getItem(KEYS.records)||'[]'); return Array.isArray(x) ? x : []; } catch { return []; } };
   const saveRecords = () => localStorage.setItem(KEYS.records, JSON.stringify(records));
   const show = id => $(id).classList.remove('hidden');
   const hide = id => $(id).classList.add('hidden');
 
-  $('showRegister').onclick=()=>{hide('loginForm');show('registerForm');$('registerError').textContent='';};
-  $('showLogin').onclick=()=>{hide('registerForm');show('loginForm');$('loginError').textContent='';};
+  $('showRegister').onclick = () => { hide('loginForm'); show('registerForm'); $('registerError').textContent=''; };
+  $('showLogin').onclick = () => { hide('registerForm'); show('loginForm'); $('loginError').textContent=''; };
 
   $('doRegister').addEventListener('submit', e => {
     e.preventDefault();
-    const username=$('newUser').value.trim(), pin=$('newPin').value, confirm=$('confirmPin').value;
-    if(pin!==confirm){$('registerError').textContent='Las contraseñas no coinciden.';return;}
-    if(getUser()){ $('registerError').textContent='Ya existe un acceso local. Inicia sesión.';return; }
-    localStorage.setItem(KEYS.user,JSON.stringify({username,pin}));
-    $('loginUser').value=username; $('loginPin').value=pin;
+    const username = $('newUser').value.trim(), pin = $('newPin').value, confirm = $('confirmPin').value;
+    if (pin !== confirm) { $('registerError').textContent = 'Las contraseñas no coinciden.'; return; }
+    if (getUser()) { $('registerError').textContent = 'Ya existe un acceso local. Inicia sesión.'; return; }
+    localStorage.setItem(KEYS.user, JSON.stringify({username, pin}));
+    $('loginUser').value = username; $('loginPin').value = pin;
     $('doRegister').requestSubmit();
   });
 
   $('doLogin').addEventListener('submit', e => {
     e.preventDefault();
-    const user=getUser();
-    if(!user){$('loginError').textContent='Primero crea tu acceso local.';return;}
-    if($('loginUser').value.trim()!==user.username || $('loginPin').value!==user.pin){$('loginError').textContent='Usuario o contraseña incorrectos.';return;}
+    const user = getUser();
+    if (!user) { $('loginError').textContent = 'Primero crea tu acceso local.'; return; }
+    if ($('loginUser').value.trim() !== user.username || $('loginPin').value !== user.pin) { $('loginError').textContent = 'Usuario o contraseña incorrectos.'; return; }
     openApp(user.username);
   });
 
-  function openApp(username){
-    records=getRecords();
-    $('welcomeUser').textContent=username; $('userInitial').textContent=username.charAt(0).toUpperCase();
-    hide('authView');show('appView');
+  function openApp(username) {
+    records = getRecords();
+    $('welcomeUser').textContent = username; $('userInitial').textContent = username.charAt(0).toUpperCase();
+    hide('authView'); show('appView');
     render();
   }
   
-  $('logout').onclick=()=>{hide('appView');show('authView');$('loginPin').value='';};
+  $('logout').onclick = () => { hide('appView'); show('authView'); $('loginPin').value=''; };
   
   $('entryForm').addEventListener('submit', e => {
     e.preventDefault();
@@ -138,19 +157,11 @@
     const key = $('key').value.trim().toUpperCase();
     const opDate = $('operationDate').value || todayStr;
     
-    let newRecord = {
-      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-      type,
-      key,
-      date: opDate
-    };
+    let newRecord = { id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), type, key, date: opDate };
 
     if (type === 'Cotización') {
       const minutes = Number($('minutes').value);
-      if (!Number.isFinite(minutes) || minutes <= 0) {
-        $('entryError').textContent = 'Ingresa un tiempo mayor que cero.';
-        return;
-      }
+      if (!Number.isFinite(minutes) || minutes <= 0) { $('entryError').textContent = 'Ingresa un tiempo mayor que cero.'; return; }
       newRecord.minutes = minutes;
     } else {
       newRecord.description = $('description').value.trim().toUpperCase();
@@ -163,25 +174,89 @@
     records.unshift(newRecord);
     saveRecords();
     
-    $('key').value = '';
-    $('minutes').value = '';
-    $('description').value = '';
-    $('supplier').value = '';
-    $('responsible').value = '';
+    $('key').value = ''; $('minutes').value = ''; $('description').value = ''; $('supplier').value = ''; $('responsible').value = '';
     $('entryError').textContent = '';
     operationDatePicker.setDate(todayStr, true);
 
-    cotizLimit = 50;
-    pedidosLimit = 50;
+    cotizPage = 1; pedidosPage = 1;
     render();
   });
 
-  // Botones de Paginación
-  $('loadMoreCotiz').onclick = () => { cotizLimit += 50; render(); };
-  $('loadMorePedidos').onclick = () => { pedidosLimit += 50; render(); };
+  $('mlForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const newRecord = {
+      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+      type: 'Pedido Mercado Libre',
+      date: todayStr,
+      mlLink: $('mlUrlInput').value.trim()
+    };
 
-  // EXPORTAR A EXCEL (CSV con codificación UTF-8 compatible)
-  // EXPORTAR A DOS ARCHIVOS EXCEL (CSV) SEPARADOS: COTIZACIONES Y PEDIDOS
+    records.unshift(newRecord);
+    saveRecords();
+    $('mlUrlInput').value = '';
+    mlPage = 1;
+    renderMlView();
+    alert('¡Enlace de Mercado Libre guardado con éxito!');
+  });
+
+  // Botones de Paginación
+  $('prevCotiz').onclick = () => { if (cotizPage > 1) { cotizPage--; render(); } };
+  $('nextCotiz').onclick = () => { cotizPage++; render(); };
+
+  $('prevPedidos').onclick = () => { if (pedidosPage > 1) { pedidosPage--; render(); } };
+  $('nextPedidos').onclick = () => { pedidosPage++; render(); };
+
+  $('prevMl').onclick = () => { if (mlPage > 1) { mlPage--; renderMlView(); } };
+  $('nextMl').onclick = () => { mlPage++; renderMlView(); };
+
+  // EXPORTAR CADA UNO EN SU PROPIO JSON
+  $('exportBtn').onclick = () => {
+    const filtered = records.filter(r => {
+      const recordDate = r.date || todayStr;
+      if (startDateFilter && recordDate < startDateFilter) return false;
+      if (endDateFilter && recordDate > endDateFilter) return false;
+      return true;
+    });
+
+    if (filtered.length === 0) { alert('No hay registros en el rango seleccionado.'); return; }
+
+    const cotizaciones = filtered.filter(r => r.type === 'Cotización');
+    const pedidos = filtered.filter(r => r.type === 'Pedido especial');
+    const mlList = filtered.filter(r => r.type === 'Pedido Mercado Libre');
+    let exportedFiles = 0;
+
+    if (cotizaciones.length > 0) {
+      const data = { app: 'PartFlow', type: 'Cotizaciones', version: 31, exportedAt: new Date().toISOString(), records: cotizaciones };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob), a = document.createElement('a');
+      a.href = url; a.download = `cotizaciones-${startDateFilter}-al-${endDateFilter}.json`; a.click(); URL.revokeObjectURL(url);
+      exportedFiles++;
+    }
+
+    if (pedidos.length > 0) {
+      const data = { app: 'PartFlow', type: 'Pedidos Especiales', version: 31, exportedAt: new Date().toISOString(), records: pedidos };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob), a = document.createElement('a');
+      a.href = url; a.download = `pedidos-especiales-${startDateFilter}-al-${endDateFilter}.json`; a.click(); URL.revokeObjectURL(url);
+      exportedFiles++;
+    }
+
+    if (mlList.length > 0) {
+      const data = { app: 'PartFlow', type: 'Mercado Libre', version: 31, exportedAt: new Date().toISOString(), records: mlList };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob), a = document.createElement('a');
+      a.href = url; a.download = `mercado-libre-${startDateFilter}-al-${endDateFilter}.json`; a.click(); URL.revokeObjectURL(url);
+      exportedFiles++;
+    }
+
+    if (exportedFiles > 0) {
+      alert(`Se han exportado ${exportedFiles} archivo(s) JSON independientes con éxito.`);
+    } else {
+      alert('No hay registros en ninguna categoría para el rango seleccionado.');
+    }
+  };
+
+  // EXPORTAR EXCEL (CSV) INDEPENDIENTE (Incluyendo Cotizaciones)
   $('exportExcelBtn').onclick = () => {
     const filtered = records.filter(r => {
       const recordDate = r.date || todayStr;
@@ -190,190 +265,148 @@
       return true;
     });
 
-    if (filtered.length === 0) {
-      alert('No hay registros en el rango seleccionado para exportar.');
-      return;
-    }
+    if (filtered.length === 0) { alert('No hay registros en el rango seleccionado.'); return; }
 
-    // 1. Filtrar listas independientes
     const cotizaciones = filtered.filter(r => r.type === 'Cotización');
     const pedidos = filtered.filter(r => r.type === 'Pedido especial');
-
+    const mlList = filtered.filter(r => r.type === 'Pedido Mercado Libre');
     let exportCount = 0;
 
-    // 2. Generar archivo de Cotizaciones si existen registros
     if (cotizaciones.length > 0) {
-      let csvCotiz = "\uFEFF";
-      csvCotiz += "FECHA,CLAVE,TIEMPO_MINUTOS\r\n";
-      cotizaciones.forEach(r => {
-        const fecha = r.date || todayStr;
-        const clave = `"${(r.key || '').replace(/"/g, '""')}"`;
-        const minutos = r.minutes !== undefined ? r.minutes : '';
-        csvCotiz += `${fecha},${clave},${minutos}\r\n`;
-      });
-
-      const blobCotiz = new Blob([csvCotiz], { type: 'text/csv;charset=utf-8;' });
-      const urlCotiz = URL.createObjectURL(blobCotiz);
-      const aCotiz = document.createElement('a');
-      aCotiz.href = urlCotiz;
-      aCotiz.download = `cotizaciones-${startDateFilter}-al-${endDateFilter}.csv`;
-      aCotiz.click();
-      URL.revokeObjectURL(urlCotiz);
+      let csvCotiz = "\uFEFFFECHA,CLAVE,TIEMPO_MINUTOS\r\n";
+      cotizaciones.forEach(r => { csvCotiz += `${r.date || todayStr},"${(r.key || '').replace(/"/g, '""')}",${r.minutes}\r\n`; });
+      const blob = new Blob([csvCotiz], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob), a = document.createElement('a');
+      a.href = url; a.download = `cotizaciones-${startDateFilter}-al-${endDateFilter}.csv`; a.click(); URL.revokeObjectURL(url);
       exportCount++;
     }
 
     if (pedidos.length > 0) {
-      let csvPedidos = "\uFEFF";
-      csvPedidos += "CLAVE,DESCRIPCION,PROVEEDOR,FECHA_LLEGADA,FECHA_PEDIDO,ATENDIDO,RESPONSABLE\r\n";
+      let csvPedidos = "\uFEFFCLAVE,DESCRIPCION,PROVEEDOR,FECHA_PEDIDO,FECHA_LLEGADA,ATENDIDO,RESPONSABLE\r\n";
       pedidos.forEach(r => {
-        const clave = `"${(r.key || '').replace(/"/g, '""')}"`;
-        const desc = `"${(r.description || '').replace(/"/g, '""')}"`;
-        const prov = `"${(r.supplier || '').replace(/"/g, '""')}"`;
-        const llegada = r.arrivalDate || '';
-        const fechaPedido = r.date || todayStr;
-        const atendido = r.completed ? 'SÍ' : 'NO';
-        const resp = `"${(r.responsible || '').replace(/"/g, '""')}"`;
-
-        csvPedidos += `${clave},${desc},${prov},${llegada},${fechaPedido},${atendido},${resp}\r\n`;
+        csvPedidos += `"${(r.key || '').replace(/"/g, '""')}","${(r.description || '').replace(/"/g, '""')}","${(r.supplier || '').replace(/"/g, '""')}",${r.date || todayStr},${r.arrivalDate || ''},${r.completed ? 'SÍ' : 'NO'},"${(r.responsible || '').replace(/"/g, '""')}"\r\n`;
       });
-
-      const blobPedidos = new Blob([csvPedidos], { type: 'text/csv;charset=utf-8;' });
-      const urlPedidos = URL.createObjectURL(blobPedidos);
-      const aPedidos = document.createElement('a');
-      aPedidos.href = urlPedidos;
-      aPedidos.download = `pedidos-especiales-${startDateFilter}-al-${endDateFilter}.csv`;
-      aPedidos.click();
-      URL.revokeObjectURL(urlPedidos);
+      const blob = new Blob([csvPedidos], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob), a = document.createElement('a');
+      a.href = url; a.download = `pedidos-especiales-${startDateFilter}-al-${endDateFilter}.csv`; a.click(); URL.revokeObjectURL(url);
       exportCount++;
     }
 
-    if (exportCount > 0) {
-      alert(`Se han exportado ${exportCount} archivo(s) Excel con éxito según el rango seleccionado.`);
-    } else {
-      alert('No se encontraron registros de cotizaciones ni de pedidos para los filtros actuales.');
+    if (mlList.length > 0) {
+      let csvMl = "\uFEFFFECHA,ENLACE_ML\r\n";
+      mlList.forEach(r => { csvMl += `${r.date || todayStr},"${(r.mlLink || '').replace(/"/g, '""')}"\r\n`; });
+      const blob = new Blob([csvMl], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob), a = document.createElement('a');
+      a.href = url; a.download = `mercado-libre-${startDateFilter}-al-${endDateFilter}.csv`; a.click(); URL.revokeObjectURL(url);
+      exportCount++;
     }
+
+    if (exportCount > 0) alert(`Se han exportado ${exportCount} archivo(s) Excel (CSV) con éxito.`);
+    else alert('No se encontraron registros para los filtros actuales.');
   };
 
-  // PURGAR HISTÓRICO ANTIGUO
-  $('purgeBtn').onclick = () => {
-    const dias = prompt('¿Cuántos días de antigüedad deseas CONSERVAR? (Ej. Escribe 90 para borrar todo lo que tenga más de 3 meses):', '90');
-    if (!dias || isNaN(dias)) return;
+  // IMPORTACIÓN MÚLTIPLE AUTOMÁTICA SIN PASOS INTERMEDIOS
+  $('importFile').onchange = async e => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    try {
+      let allImportedRecords = [...records];
+      for (let file of files) {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        const incoming = Array.isArray(data) ? data : (Array.isArray(data.records) ? data.records : []);
+        if (incoming.length > 0) {
+          incoming.forEach(inc => {
+            // Evitar duplicados exactos por ID
+            if (!allImportedRecords.some(r => r.id === inc.id)) {
+              allImportedRecords.push(inc);
+            }
+          });
+        }
+      }
+      records = allImportedRecords;
+      saveRecords();
+      cotizPage = 1; pedidosPage = 1; mlPage = 1;
+      render(); renderMlView();
+      alert('¡Importación de archivos completada con éxito!');
+    } catch (err) {
+      alert('Error al leer o procesar los archivos JSON.');
+    }
+    e.target.value = '';
+  };
 
+  $('purgeBtn').onclick = () => {
+    const dias = prompt('¿Cuántos días de antigüedad deseas CONSERVAR? (Ej. 90):', '90');
+    if (!dias || isNaN(dias)) return;
     const limiteDias = parseInt(dias, 10);
     const fechaCorteObj = new Date();
     fechaCorteObj.setDate(fechaCorteObj.getDate() - limiteDias);
     const fechaCorteStr = getLocalDateString(fechaCorteObj);
 
-    if (confirm(`Se eliminarán permanentemente todos los registros anteriores al ${fechaCorteStr}.\n\nSe recomienda exportar un respaldo JSON antes. ¿Deseas proceder?`)) {
+    if (confirm(`Se eliminarán permanentemente los registros anteriores al ${fechaCorteStr}. ¿Proceder?`)) {
       const totalAntes = records.length;
-      records = records.filter(r => {
-        const rDate = r.date || todayStr;
-        return rDate >= fechaCorteStr;
-      });
-      const eliminados = totalAntes - records.length;
+      records = records.filter(r => (r.date || todayStr) >= fechaCorteStr);
       saveRecords();
-      cotizLimit = 50;
-      pedidosLimit = 50;
-      render();
-      alert(`Se han depurado ${eliminados} registros antiguos. Tu navegador ahora está optimizado.`);
+      cotizPage = 1; pedidosPage = 1; mlPage = 1;
+      render(); renderMlView();
+      alert(`Se han depurado ${totalAntes - records.length} registros antiguos.`);
     }
   };
 
   $('weeklySummaryBtn').onclick = () => {
-    reportStart = todayStr;
-    reportEnd = todayStr;
+    reportStart = todayStr; reportEnd = todayStr;
     reportRangePicker.setDate([todayStr, todayStr], true);
     $('weeklyRangeTitle').textContent = `Del ${todayStr} al ${todayStr}`;
-    show('weeklySection');
-    renderReport(todayStr, todayStr);
+    show('weeklySection'); renderReport(todayStr, todayStr);
   };
 
-  $('closeWeekly').onclick = () => {
-    hide('weeklySection');
-  };
+  $('closeWeekly').onclick = () => hide('weeklySection');
 
   $('downloadReportImg').onclick = async () => {
     const reportElement = $('weeklySection');
     const originalBtn = $('downloadReportImg');
-    
-    originalBtn.textContent = 'Generando captura...';
-    originalBtn.disabled = true;
-
+    originalBtn.textContent = 'Generando...'; originalBtn.disabled = true;
     try {
-      const canvas = await html2canvas(reportElement, {
-        backgroundColor: '#0f172a',
-        scale: 2,
-        useCORS: true,
-        ignoreElements: (element) => element.getAttribute('data-html2canvas-ignore') === 'true'
-      });
-
-      const imageURI = canvas.toDataURL('image/png');
+      const canvas = await html2canvas(reportElement, { backgroundColor: '#0f172a', scale: 2, useCORS: true, ignoreElements: (el) => el.getAttribute('data-html2canvas-ignore') === 'true' });
       const link = document.createElement('a');
-      link.href = imageURI;
-      link.download = `reporte-cotizaciones-${reportStart}-al-${reportEnd}.png`;
-      document.body.appendChild(link);
+      link.href = canvas.toDataURL('image/png'); link.download = `reporte-${reportStart}-al-${reportEnd}.png`;
       link.click();
-      document.body.removeChild(link);
-    } catch (err) {
-      alert('Hubo un inconveniente al generar la imagen del reporte.');
-    } finally {
-      originalBtn.textContent = '📷 Descargar en Imagen';
-      originalBtn.disabled = false;
-    }
+    } catch (err) { alert('Error al generar la imagen.'); } 
+    finally { originalBtn.textContent = '📷 Descargar Imagen'; originalBtn.disabled = false; }
   };
 
   function renderReport(startRange, endRange) {
-    const periodCotiz = records.filter(r => {
-      if (r.type !== 'Cotización') return false;
-      const d = r.date || todayStr;
-      return d >= startRange && d <= endRange;
-    });
-
+    const periodCotiz = records.filter(r => r.type === 'Cotización' && (r.date || todayStr) >= startRange && (r.date || todayStr) <= endRange);
     $('weekTotalCount').textContent = periodCotiz.length;
 
     if (periodCotiz.length === 0) {
-      $('weekAvgTime').textContent = '0 min';
-      $('weekMedianTime').textContent = '0 min';
-      $('weeklyCotizBody').innerHTML = '';
-      show('emptyWeekly');
+      $('weekAvgTime').textContent = '0 min'; $('weekMedianTime').textContent = '0 min';
+      $('weeklyCotizBody').innerHTML = ''; show('emptyWeekly');
       if (weeklyChartInstance) { weeklyChartInstance.destroy(); weeklyChartInstance = null; }
       return;
     }
 
     hide('emptyWeekly');
-
     const totalMinutes = periodCotiz.reduce((sum, r) => sum + Number(r.minutes), 0);
-    const avg = totalMinutes / periodCotiz.length;
-    $('weekAvgTime').textContent = avg.toFixed(1) + ' min';
+    $('weekAvgTime').textContent = (totalMinutes / periodCotiz.length).toFixed(1) + ' min';
 
     const sortedTimes = periodCotiz.map(r => Number(r.minutes)).sort((a, b) => a - b);
-    let median = 0;
     const mid = Math.floor(sortedTimes.length / 2);
-    if (sortedTimes.length % 2 === 0) {
-      median = (sortedTimes[mid - 1] + sortedTimes[mid]) / 2;
-    } else {
-      median = sortedTimes[mid];
-    }
+    const median = sortedTimes.length % 2 === 0 ? (sortedTimes[mid - 1] + sortedTimes[mid]) / 2 : sortedTimes[mid];
     $('weekMedianTime').textContent = median.toFixed(1) + ' min';
 
     const groupedByDay = {};
     periodCotiz.forEach(r => {
       const d = r.date || todayStr;
-      if (!groupedByDay[d]) {
-        groupedByDay[d] = { totalMin: 0, items: [] };
-      }
+      if (!groupedByDay[d]) groupedByDay[d] = { totalMin: 0, items: [] };
       groupedByDay[d].totalMin += Number(r.minutes);
       groupedByDay[d].items.push({ key: r.key, minutes: Number(r.minutes) });
     });
 
     const sortedDates = Object.keys(groupedByDay).sort();
     const daysOfWeek = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-
-    const chartLabels = [];
-    const chartDataPoints = [];
-    const medianLineData = [];
-    const tbody = $('weeklyCotizBody');
-    tbody.innerHTML = '';
+    const chartLabels = [], chartDataPoints = [], medianLineData = [];
+    const tbody = $('weeklyCotizBody'); tbody.innerHTML = '';
 
     sortedDates.forEach(dateStr => {
       const data = groupedByDay[dateStr];
@@ -392,64 +425,22 @@
 
       const tr = document.createElement('tr');
       tr.className = 'hover:bg-slate-800/40 transition-colors';
-      tr.innerHTML = `
-        <td class="p-3 text-brand-400 font-semibold">${dayName}</td>
-        <td class="p-3 text-slate-300">${dateStr}</td>
-        <td class="p-3">
-          <div class="flex flex-wrap items-center">${itemsHtml}</div>
-        </td>
-        <td class="p-3 text-right text-slate-200 font-semibold whitespace-nowrap">${dayAvg.toFixed(1)} min</td>
-      `;
+      tr.innerHTML = `<td class="p-3 text-brand-400 font-semibold">${dayName}</td><td class="p-3 text-slate-300">${dateStr}</td><td class="p-3"><div class="flex flex-wrap items-center">${itemsHtml}</div></td><td class="p-3 text-right text-slate-200 font-semibold">${dayAvg.toFixed(1)} min</td>`;
       tbody.appendChild(tr);
     });
 
     const ctx = $('weeklyChart').getContext('2d');
-    if (weeklyChartInstance) {
-      weeklyChartInstance.destroy();
-    }
-
+    if (weeklyChartInstance) weeklyChartInstance.destroy();
     weeklyChartInstance = new Chart(ctx, {
       type: 'line',
       data: {
         labels: chartLabels,
         datasets: [
-          {
-            label: 'Tiempo Promedio Diario (min)',
-            data: chartDataPoints,
-            backgroundColor: '#4ce0a0',
-            borderColor: '#4ce0a0',
-            borderWidth: 2,
-            pointRadius: 6,
-            pointHoverRadius: 8,
-            tension: 0.1
-          },
-          {
-            label: `Media / Mediana del Período (${median.toFixed(1)} min)`,
-            data: medianLineData,
-            borderColor: '#38bdf8',
-            borderWidth: 2,
-            borderDash: [5, 5],
-            pointRadius: 0,
-            fill: false
-          }
+          { label: 'Promedio Diario (min)', data: chartDataPoints, borderColor: '#4ce0a0', backgroundColor: '#4ce0a0', borderWidth: 2, tension: 0.1 },
+          { label: `Mediana (${median.toFixed(1)} min)`, data: medianLineData, borderColor: '#38bdf8', borderWidth: 2, borderDash: [5, 5], pointRadius: 0, fill: false }
         ]
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { labels: { color: '#cbd5e1', font: { size: 11 } } },
-          tooltip: {
-            callbacks: {
-              label: function(context) { return `${context.dataset.label}: ${context.raw} min`; }
-            }
-          }
-        },
-        scales: {
-          x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(51, 65, 85, 0.3)' } },
-          y: { beginAtZero: true, ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(51, 65, 85, 0.3)' } }
-        }
-      }
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#cbd5e1' } } }, scales: { x: { ticks: { color: '#94a3b8' } }, y: { beginAtZero: true, ticks: { color: '#94a3b8' } } } }
     });
   }
 
@@ -463,293 +454,114 @@
 
     const cotizaciones = filtered.filter(r => r.type === 'Cotización');
     const pedidos = filtered.filter(r => r.type === 'Pedido especial');
-    
     const avgCotiz = cotizaciones.length ? cotizaciones.reduce((s,r) => s + Number(r.minutes), 0) / cotizaciones.length : 0;
     
     $('totalCotizStat').textContent = cotizaciones.length;
     $('averageStat').textContent = avgCotiz.toFixed(1) + ' min';
     $('ordersStat').textContent = pedidos.length;
 
-    // Cotizaciones con Lazy Loading (50 en 50)
-    const cotizToRender = cotizaciones.slice(0, cotizLimit);
-    $('cotizPageInfo').textContent = `Mostrando ${cotizToRender.length} de ${cotizaciones.length} cotizaciones`;
-    $('loadMoreCotiz').classList.toggle('hidden', cotizLimit >= cotizaciones.length);
+    // --- RENDER COTIZACIONES (PAGINACIÓN 10 EN 10) ---
+    const totalPagesCotiz = Math.ceil(cotizaciones.length / PAGE_SIZE) || 1;
+    if (cotizPage > totalPagesCotiz) cotizPage = totalPagesCotiz;
+    const cotizStart = (cotizPage - 1) * PAGE_SIZE;
+    const cotizToRender = cotizaciones.slice(cotizStart, cotizStart + PAGE_SIZE);
 
-    const cotizBody = $('cotizBody');
-    cotizBody.innerHTML = '';
+    $('cotizPageInfo').textContent = `Página ${cotizPage} de ${totalPagesCotiz}`;
+    $('prevCotiz').disabled = cotizPage === 1;
+    $('nextCotiz').disabled = cotizPage >= totalPagesCotiz;
+
+    const cotizBody = $('cotizBody'); cotizBody.innerHTML = '';
     $('emptyCotiz').classList.toggle('hidden', cotizaciones.length > 0);
 
     cotizToRender.forEach(r => {
       const tr = document.createElement('tr');
       tr.className = 'hover:bg-slate-800/40 transition-colors';
-      tr.innerHTML = `
-        <td class="p-3.5 text-slate-300">${r.date || todayStr}</td>
-        <td class="p-3.5 font-medium text-white uppercase">${r.key}</td>
-        <td class="p-3.5 text-brand-400 font-semibold">${Number(r.minutes).toFixed(1)} min</td>
-      `;
-
-      const tdAction = document.createElement('td');
-      tdAction.className = 'p-3.5 text-right';
+      tr.innerHTML = `<td class="p-3.5 text-slate-300">${r.date || todayStr}</td><td class="p-3.5 font-medium text-white uppercase">${r.key}</td><td class="p-3.5 text-brand-400 font-semibold">${Number(r.minutes).toFixed(1)} min</td>`;
+      const tdAction = document.createElement('td'); tdAction.className = 'p-3.5 text-right';
       const del = document.createElement('button');
-      del.className = 'px-2.5 py-1 text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border border-rose-500/30 rounded-lg transition';
+      del.className = 'px-2.5 py-1 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 border border-rose-500/30 rounded-lg transition';
       del.textContent = 'Eliminar';
       del.onclick = () => {
         if (confirm('¿Eliminar esta cotización?')) {
-          records = records.filter(x => x.id !== r.id);
-          saveRecords();
-          render();
-          if (!$('weeklySection').classList.contains('hidden')) {
-            renderReport(reportStart, reportEnd);
-          }
+          records = records.filter(x => x.id !== r.id); saveRecords(); render();
+          if (!$('weeklySection').classList.contains('hidden')) renderReport(reportStart, reportEnd);
         }
       };
-      tdAction.appendChild(del);
-      tr.appendChild(tdAction);
-      cotizBody.appendChild(tr);
+      tdAction.appendChild(del); tr.appendChild(tdAction); cotizBody.appendChild(tr);
     });
 
-    // Pedidos Especiales con Lazy Loading (50 en 50)
-    const pedidosToRender = pedidos.slice(0, pedidosLimit);
-    $('pedidosPageInfo').textContent = `Mostrando ${pedidosToRender.length} de ${pedidos.length} pedidos`;
-    $('loadMorePedidos').classList.toggle('hidden', pedidosLimit >= pedidos.length);
+    // --- RENDER PEDIDOS ESPECIALES (PAGINACIÓN 10 EN 10 - F. Pedido antes de Llegada) ---
+    const totalPagesPedidos = Math.ceil(pedidos.length / PAGE_SIZE) || 1;
+    if (pedidosPage > totalPagesPedidos) pedidosPage = totalPagesPedidos;
+    const pedidosStart = (pedidosPage - 1) * PAGE_SIZE;
+    const pedidosToRender = pedidos.slice(pedidosStart, pedidosStart + PAGE_SIZE);
 
-    const pedidosBody = $('pedidosBody');
-    pedidosBody.innerHTML = '';
+    $('pedidosPageInfo').textContent = `Página ${pedidosPage} de ${totalPagesPedidos}`;
+    $('prevPedidos').disabled = pedidosPage === 1;
+    $('nextPedidos').disabled = pedidosPage >= totalPagesPedidos;
+
+    const pedidosBody = $('pedidosBody'); pedidosBody.innerHTML = '';
     $('emptyPedidos').classList.toggle('hidden', pedidos.length > 0);
 
     pedidosToRender.forEach(r => {
       const tr = document.createElement('tr');
       tr.className = 'hover:bg-slate-800/40 transition-colors';
+      tr.innerHTML = `<td class="p-3.5 font-medium text-white uppercase">${r.key}</td><td class="p-3.5 text-slate-300 uppercase">${r.description || ''}</td><td class="p-3.5 text-slate-300 uppercase">${r.supplier || ''}</td>`;
 
-      tr.innerHTML = `
-        <td class="p-3.5 font-medium text-white uppercase">${r.key}</td>
-        <td class="p-3.5 text-slate-300 uppercase">${r.description || ''}</td>
-        <td class="p-3.5 text-slate-300 uppercase">${r.supplier || ''}</td>
-      `;
-
-      const tdAttended = document.createElement('td');
-      tdAttended.className = 'p-3.5 text-center';
-      
-      const label = document.createElement('label');
-      label.className = 'relative inline-flex items-center cursor-pointer';
-      
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.checked = !!r.completed;
-      checkbox.className = 'sr-only peer';
-      checkbox.onchange = () => {
-        r.completed = checkbox.checked;
-        saveRecords();
-      };
-
+      const tdAttended = document.createElement('td'); tdAttended.className = 'p-3.5 text-center';
+      const label = document.createElement('label'); label.className = 'relative inline-flex items-center cursor-pointer';
+      const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = !!r.completed; checkbox.className = 'sr-only peer';
+      checkbox.onchange = () => { r.completed = checkbox.checked; saveRecords(); };
       const divSlider = document.createElement('div');
-      divSlider.className = "w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-400";
+      divSlider.className = "w-9 h-5 bg-slate-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-400";
+      label.appendChild(checkbox); label.appendChild(divSlider); tdAttended.appendChild(label); tr.appendChild(tdAttended);
 
-      label.appendChild(checkbox);
-      label.appendChild(divSlider);
-      tdAttended.appendChild(label);
-      tr.appendChild(tdAttended);
+      // F. Pedido (r.date) impreso ANTES de la fecha de llegada (r.arrivalDate)
+      tr.innerHTML += `<td class="p-3.5 text-slate-300">${r.date || todayStr}</td><td class="p-3.5 text-emerald-400 font-medium">${r.arrivalDate || ''}</td><td class="p-3.5 text-slate-300 uppercase">${r.responsible || ''}</td>`;
 
-      const tdDate = document.createElement('td');
-      tdDate.className = 'p-3.5 text-slate-300';
-      tdDate.textContent = r.date || todayStr;
-      tr.appendChild(tdDate);
-
-      const tdArrival = document.createElement('td');
-      tdArrival.className = 'p-3.5 text-emerald-400 font-medium';
-      tdArrival.textContent = r.arrivalDate;
-      tr.appendChild(tdArrival);
-
-      const tdResp = document.createElement('td');
-      tdResp.className = 'p-3.5 text-slate-300 uppercase';
-      tdResp.textContent = r.responsible || '';
-      tr.appendChild(tdResp);
-
-      const tdAction = document.createElement('td');
-      tdAction.className = 'p-3.5 text-right';
+      const tdAction = document.createElement('td'); tdAction.className = 'p-3.5 text-right';
       const del = document.createElement('button');
-      del.className = 'px-2.5 py-1 text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border border-rose-500/30 rounded-lg transition';
+      del.className = 'px-2.5 py-1 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 border border-rose-500/30 rounded-lg transition';
       del.textContent = 'Eliminar';
-      del.onclick = () => {
-        if (confirm('¿Eliminar este pedido especial?')) {
-          records = records.filter(x => x.id !== r.id);
-          saveRecords();
-          render();
-        }
-      };
-      tdAction.appendChild(del);
-      tr.appendChild(tdAction);
+      del.onclick = () => { if (confirm('¿Eliminar pedido?')) { records = records.filter(x => x.id !== r.id); saveRecords(); render(); } };
+      tdAction.appendChild(del); tr.appendChild(tdAction); pedidosBody.appendChild(tr);
+    });
+  }
 
-      pedidosBody.appendChild(tr);
+  function renderMlView() {
+    const mlRecords = records.filter(r => r.type === 'Pedido Mercado Libre');
+    const totalPagesMl = Math.ceil(mlRecords.length / PAGE_SIZE) || 1;
+    if (mlPage > totalPagesMl) mlPage = totalPagesMl;
+    const mlStart = (mlPage - 1) * PAGE_SIZE;
+    const toRender = mlRecords.slice(mlStart, mlStart + PAGE_SIZE);
+
+    $('mlViewPageInfo').textContent = `Página ${mlPage} de ${totalPagesMl}`;
+    $('prevMl').disabled = mlPage === 1;
+    $('nextMl').disabled = mlPage >= totalPagesMl;
+
+    const tbody = $('mlTableBody'); tbody.innerHTML = '';
+    $('emptyMlView').classList.toggle('hidden', mlRecords.length > 0);
+
+    toRender.forEach(r => {
+      const tr = document.createElement('tr');
+      tr.className = 'hover:bg-slate-800/40 transition-colors';
+      tr.innerHTML = `<td class="p-3.5 text-slate-300">${r.date || todayStr}</td><td class="p-3.5"><a href="${r.mlLink}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-500/10 border border-sky-500/30 text-sky-400 hover:bg-sky-500/20 font-semibold transition">🔗 Abrir enlace</a></td>`;
+
+      const tdAction = document.createElement('td'); tdAction.className = 'p-3.5 text-right';
+      const del = document.createElement('button');
+      del.className = 'px-2.5 py-1 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 border border-rose-500/30 rounded-lg transition';
+      del.textContent = 'Eliminar';
+      del.onclick = () => { if (confirm('¿Eliminar enlace?')) { records = records.filter(x => x.id !== r.id); saveRecords(); renderMlView(); } };
+      tdAction.appendChild(del); tr.appendChild(tdAction); tbody.appendChild(tr);
     });
   }
 
   $('clearFilters').onclick = () => {
     rangePicker.setDate([todayStr, todayStr], true);
-    startDateFilter = todayStr;
-    endDateFilter = todayStr;
-    cotizLimit = 50;
-    pedidosLimit = 50;
+    startDateFilter = todayStr; endDateFilter = todayStr;
+    cotizPage = 1; pedidosPage = 1;
     render();
   };
-
-  $('exportBtn').onclick = () => {
-    const recordsToExport = records.filter(r => {
-      const recordDate = r.date || todayStr;
-      if (startDateFilter && recordDate < startDateFilter) return false;
-      if (endDateFilter && recordDate > endDateFilter) return false;
-      return true;
-    });
-
-    if (recordsToExport.length === 0) {
-      alert('No hay registros en el rango de fechas seleccionado para exportar.');
-      return;
-    }
-
-    const data = { 
-      app: 'Cotizaciones', 
-      version: 2.0, 
-      exportedAt: new Date().toISOString(), 
-      range: { start: startDateFilter, end: endDateFilter },
-      records: recordsToExport 
-    };
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob), a = document.createElement('a');
-    a.href = url;
-    a.download = `Cotizaciones-respaldo-${startDateFilter}-al-${endDateFilter}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-  
-  $('importFile').onchange = async e => {
-    const file = e.target.files[0]; 
-    if (!file) return;
-    
-    try {
-      const fileText = await file.text();
-      const data = JSON.parse(fileText);
-      const incoming = Array.isArray(data) ? data : data.records;
-      
-      if (!Array.isArray(incoming)) throw new Error('Formato inválido');
-
-      const filterOption = confirm(
-        `El archivo contiene ${incoming.length} registros.\n\n` +
-        `¿Deseas filtrar los registros por un rango de fechas antes de importarlos?\n\n` +
-        `• Aceptar: Elegir fechas de inicio y fin para importar solo lo necesario.\n` +
-        `• Cancelar: Importar todos los registros del archivo.`
-      );
-
-      let recordsToImport = incoming;
-
-      if (filterOption) {
-        const promptStart = prompt('Ingresa la fecha de INICIO a importar (YYYY-MM-DD):', todayStr);
-        if (!promptStart) { e.target.value = ''; return; }
-        
-        const promptEnd = prompt('Ingresa la fecha de FIN a importar (YYYY-MM-DD):', todayStr);
-        if (!promptEnd) { e.target.value = ''; return; }
-
-        recordsToImport = incoming.filter(r => {
-          const rDate = r.date || todayStr;
-          return rDate >= promptStart && rDate <= promptEnd;
-        });
-
-        alert(`Se filtraron ${recordsToImport.length} registros entre el ${promptStart} y el ${promptEnd}.`);
-      }
-
-      if (recordsToImport.length === 0) {
-        alert('No hay registros en el rango especificado para importar.');
-        e.target.value = '';
-        return;
-      }
-
-      const mode = confirm(`¿Deseas REEMPLAZAR tus registros actuales o FUSIONARLOS con los ${recordsToImport.length} registros a importar?\n\n• Aceptar: Reemplazar todo\n• Cancelar: Fusionar (agregar sin borrar lo actual)`);
-
-      if (mode) {
-        records = recordsToImport;
-      } else {
-        const existingIds = new Set(records.map(r => r.id));
-        const uniqueNew = recordsToImport.filter(r => !existingIds.has(r.id));
-        records = [...uniqueNew, ...records];
-      }
-
-      saveRecords();
-      cotizLimit = 50;
-      pedidosLimit = 50;
-      render();
-      alert('¡Importación completada con éxito!');
-
-    } catch (err) {
-      alert('El archivo no tiene un formato de respaldo válido.');
-    }
-    
-    e.target.value = '';
-  };
-
-
- (function() {
-  const line1Text = "Autopartes, Toro";
-  const line2Text = " Dept. Cotizaciones.";
-  
-  const typingSpeed = 100; 
-  const erasingSpeed = 60;
-  const pauseTime = 2000; 
-
-  function iniciarEfectoTypewriter() {
-    const elLine1 = document.getElementById('typedLine1');
-    const elLine2 = document.getElementById('typedLine2');
-
-    if (!elLine1 || !elLine2) return;
-
-    let i = 0;
-    let j = 0;
-    let isDeleting = false;
-
-    function loop() {
-      if (!isDeleting && i <= line1Text.length) {
-        elLine1.textContent = line1Text.substring(0, i);
-        i++;
-        setTimeout(loop, typingSpeed);
-      } 
-      else if (!isDeleting && j <= line2Text.length) {
-        elLine2.textContent = line2Text.substring(0, j);
-        j++;
-        setTimeout(loop, typingSpeed);
-      } 
-      else if (!isDeleting && i > line1Text.length && j > line2Text.length) {
-        isDeleting = true;
-        setTimeout(loop, pauseTime);
-      } 
-      else if (isDeleting && j > 0) {
-        j--;
-        elLine2.textContent = line2Text.substring(0, j);
-        setTimeout(loop, erasingSpeed);
-      } 
-      else if (isDeleting && i > 0) {
-        i--;
-        elLine1.textContent = line1Text.substring(0, i);
-        setTimeout(loop, erasingSpeed);
-      } 
-      else if (isDeleting && i === 0 && j === 0) {
-        isDeleting = false;
-        setTimeout(loop, 500);
-      }
-    }
-
-    loop();
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', iniciarEfectoTypewriter);
-  } else {
-    iniciarEfectoTypewriter();
-  }
-})();
-
-
-
-
-
 
   if(!getUser()) $('loginError').textContent = 'Crea tu acceso local para comenzar.';
 })();
