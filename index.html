@@ -45,11 +45,12 @@
   <div class="max-w-2xl my-auto py-12 z-10">
     <span class="text-xs font-bold tracking-widest uppercase text-brand-400 opacity-90">Tu espacio de trabajo</span>
     
-    <!-- Título animado dinámicamente -->
+    <!-- Título animado con estructura Tailwind -->
     <h1 id="typingHeader" class="text-5xl xl:text-7xl font-extrabold tracking-tight text-white mt-4 mb-6 leading-tight min-h-[140px] xl:min-h-[180px]">
       <span id="line1" class="inline"></span><br>
       <span id="line2" class="text-brand-400 inline"></span>
-      <span id="typingCursor" class="inline-block w-1.5 h-10 xl:h-14 bg-brand-400 ml-1 translate-y-1 rounded-sm animate-pulse"></span>
+      <!-- Cursor con animación arbitraria de Tailwind CSS -->
+      <span id="typingCursor" class="inline-block w-1.5 h-10 xl:h-14 bg-brand-400 ml-1 translate-y-1 rounded-sm animate-[ping_1s_cubic-bezier(0,0,0.2,1)_infinite] transition-opacity duration-500"></span>
     </h1>
 
     <p class="text-slate-400 text-lg leading-relaxed max-w-xl">

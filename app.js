@@ -688,3 +688,47 @@
 
   if(!getUser()) $('loginError').textContent = 'Crea tu acceso local para comenzar.';
 })();
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  const line1Text = "Registra. Analiza.";
+  const line2Text = "Mejora.";
+  
+  const line1El = document.getElementById('line1');
+  const line2El = document.getElementById('line2');
+  const cursorEl = document.getElementById('typingCursor');
+
+  if (!line1El || !line2El || !cursorEl) return;
+
+  let i = 0;
+  let j = 0;
+
+  // Escribir primera línea
+  function typeLine1() {
+    if (i < line1Text.length) {
+      line1El.textContent += line1Text.charAt(i);
+      i++;
+      setTimeout(typeLine1, 70); // 70ms por letra
+    } else {
+      setTimeout(typeLine2, 350); // Pausa entre líneas
+    }
+  }
+
+  // Escribir segunda línea en color brand-400
+  function typeLine2() {
+    if (j < line2Text.length) {
+      line2El.textContent += line2Text.charAt(j);
+      j++;
+      setTimeout(typeLine2, 90); // 90ms por letra para dar énfasis
+    } else {
+      // Remover la animación de parpadeo y atenuar suavemente con clases Tailwind
+      setTimeout(() => {
+        cursorEl.classList.remove('animate-[ping_1s_cubic-bezier(0,0,0.2,1)_infinite]');
+        cursorEl.classList.add('opacity-30');
+      }, 1000);
+    }
+  }
+
+  // Inicio de la secuencia
+  setTimeout(typeLine1, 250);
+});
