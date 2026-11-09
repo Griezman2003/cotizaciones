@@ -45,12 +45,50 @@
   <div class="max-w-2xl my-auto py-12 z-10">
     <span class="text-xs font-bold tracking-widest uppercase text-brand-400 opacity-90">Tu espacio de trabajo</span>
     
-    <!-- Título animado con estructura Tailwind -->
-    <h1 id="typingHeader" class="text-5xl xl:text-7xl font-extrabold tracking-tight text-white mt-4 mb-6 leading-tight min-h-[140px] xl:min-h-[180px]">
-      <span id="line1" class="inline"></span><br>
-      <span id="line2" class="text-brand-400 inline"></span>
-      <!-- Cursor con animación arbitraria de Tailwind CSS -->
-      <span id="typingCursor" class="inline-block w-1.5 h-10 xl:h-14 bg-brand-400 ml-1 translate-y-1 rounded-sm animate-[ping_1s_cubic-bezier(0,0,0.2,1)_infinite] transition-opacity duration-500"></span>
+    <!-- Título animado con revelado de letras mediante Tailwind -->
+    <h1 class="text-5xl xl:text-7xl font-extrabold tracking-tight text-white mt-4 mb-6 leading-tight min-h-[140px] xl:min-h-[180px]">
+      
+      <!-- Línea 1: "Registra. Analiza." -->
+      <div class="inline-flex items-center">
+        <span class="overflow-hidden whitespace-nowrap border-r-4 border-transparent animate-[typing_2s_steps(18,end)_forwards]">
+          Registra. Analiza.
+        </span>
+      </div>
+      <br>
+      
+      <script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          brand: {
+            50: '#effef7',
+            400: '#4ce0a0',
+            500: '#22c55e',
+            600: '#16a34a',
+            950: '#032e1d',
+          }
+        },
+        keyframes: {
+          typing: {
+            'from': { width: '0' },
+            'to': { width: '100%' }
+          },
+          blink: {
+            '50%': { borderColor: 'transparent' }
+          }
+        }
+      }
+    }
+  }
+</script>
+      <!-- Línea 2: "Mejora." (inicia con retraso tras la primera) -->
+      <div class="inline-flex items-center">
+        <span class="text-brand-400 overflow-hidden whitespace-nowrap border-r-4 border-brand-400 animate-[typing_1s_steps(7,end)_2.2s_forwards,blink_0.75s_step-end_infinite]">
+          Mejora.
+        </span>
+      </div>
+
     </h1>
 
     <p class="text-slate-400 text-lg leading-relaxed max-w-xl">
