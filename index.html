@@ -35,24 +35,30 @@
 
 
   <section id="authView" class="min-h-screen w-full grid grid-cols-1 lg:grid-cols-12">
-    <aside class="hidden lg:flex lg:col-span-6 xl:col-span-7 flex-col justify-between p-12 xl:p-16 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-950 border-r border-slate-800/60 relative overflow-hidden">
-      <div class="absolute -top-32 -left-32 w-96 h-96 bg-brand-400/10 rounded-full blur-3xl pointer-events-none"></div>
-      
-      <a class="flex items-center gap-3 text-2xl font-black tracking-tight text-white z-10" href="#">
-        <span class="w-10 h-10 rounded-xl bg-brand-400 text-slate-950 grid place-items-center font-black text-xl shadow-lg shadow-brand-400/20">C</span><span>otizaciones</span>
-      </a>
+<aside class="hidden lg:flex lg:col-span-6 xl:col-span-7 flex-col justify-between p-12 xl:p-16 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-950 border-r border-slate-800/60 relative overflow-hidden">
+  <div class="absolute -top-32 -left-32 w-96 h-96 bg-brand-400/10 rounded-full blur-3xl pointer-events-none"></div>
+  
+  <a class="flex items-center gap-3 text-2xl font-black tracking-tight text-white z-10" href="#">
+    <span class="w-10 h-10 rounded-xl bg-brand-400 text-slate-950 grid place-items-center font-black text-xl shadow-lg shadow-brand-400/20">C</span><span>otizaciones</span>
+  </a>
 
-      <div class="max-w-2xl my-auto py-12 z-10">
-        <span class="text-xs font-bold tracking-widest uppercase text-brand-400">Tu espacio de trabajo</span>
-        <h1 class="text-5xl xl:text-7xl font-extrabold tracking-tight text-white mt-4 mb-6 leading-tight">
-          Registra. Analiza. <br><span class="text-brand-400">Mejora.</span>
-        </h1>
-        <p class="text-slate-400 text-lg leading-relaxed max-w-xl">
-          Control diario, analítica con desglose individual de tiempos, exportación a Excel e imagen y rendimiento optimizado.
-        </p>
-      </div>
-      <div class="text-xs text-slate-500 z-10">Blurryface · Aplicación local . </div>
-    </aside>
+  <div class="max-w-2xl my-auto py-12 z-10">
+    <span class="text-xs font-bold tracking-widest uppercase text-brand-400 opacity-90">Tu espacio de trabajo</span>
+    
+    <!-- Título animado dinámicamente -->
+    <h1 id="typingHeader" class="text-5xl xl:text-7xl font-extrabold tracking-tight text-white mt-4 mb-6 leading-tight min-h-[140px] xl:min-h-[180px]">
+      <span id="line1" class="inline"></span><br>
+      <span id="line2" class="text-brand-400 inline"></span>
+      <span id="typingCursor" class="inline-block w-1.5 h-10 xl:h-14 bg-brand-400 ml-1 translate-y-1 rounded-sm animate-pulse"></span>
+    </h1>
+
+    <p class="text-slate-400 text-lg leading-relaxed max-w-xl">
+      Control diario, analítica con desglose individual de tiempos, exportación a Excel e imagen y rendimiento optimizado.
+    </p>
+  </div>
+  
+  <div class="text-xs text-slate-500 z-10">Blurryface · Aplicación local</div>
+</aside>
 
     <main class="lg:col-span-6 xl:col-span-5 flex items-center justify-center p-6 sm:p-12 bg-slate-950 w-full">
       <div class="w-full max-w-md space-y-6">
