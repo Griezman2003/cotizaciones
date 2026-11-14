@@ -10,6 +10,7 @@
   const isSessionActive = localStorage.getItem(KEYS.session) === 'true';
   const user = getUser();
 
+  // === PROTECCIÓN DE RUTAS (REDIRECCIÓN A ACCESO DENEGADO) ===
   const path = window.location.pathname;
   const isLoginPage = Boolean($('authView'));
   const isDeniedPage = path.endsWith('acceso-denegado.html') || path.includes('acceso-denegado');
@@ -33,6 +34,7 @@
 
   records = getRecords();
 
+  // Sidebar collapse state (collapsed by default)
   const sidebar = $('sidebar'), overlay = $('sidebarOverlay');
   let isCollapsed = true;
 
@@ -61,6 +63,7 @@
     overlay.onclick = () => { sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden'); };
   }
 
+  // Auth logic & persistent session control
   if ($('authView')) {
     if (!user || !isSessionActive) {
       $('authView').classList.remove('hidden');
@@ -115,6 +118,7 @@
     };
   }
 
+  // --- MÓDULO 1: COTIZACIONES ---
   if ($('cotizForm')) {
     const opDatePicker = flatpickr("#operationDate", { locale: "es", defaultDate: todayStr, dateFormat: "Y-m-d" });
     opDatePicker.setDate(todayStr, true);
@@ -193,42 +197,82 @@
     });
   }
 
+  // --- MÓDULO 2: PEDIDOS ESPECIALES (CON EDICIÓN Y ESTADOS INTERACTIVOS) ---
+  let editingPedidoId = null;
+  let opDatePickerPedido = null, arrivalDatePicker = null;
+
   if ($('pedidoForm')) {
-    const opDatePicker = flatpickr("#operationDate", { locale: "es", defaultDate: todayStr, dateFormat: "Y-m-d" });
-    opDatePicker.setDate(todayStr, true);
-    const arrivalDatePicker = flatpickr("#arrivalDate", { locale: "es", defaultDate: todayStr, dateFormat: "Y-m-d" });
+    opDatePickerPedido = flatpickr("#operationDate", { locale: "es", defaultDate: todayStr, dateFormat: "Y-m-d" });
+    opDatePickerPedido.setDate(todayStr, true);
+    arrivalDatePicker = flatpickr("#arrivalDate", { locale: "es", defaultDate: todayStr, dateFormat: "Y-m-d" });
     arrivalDatePicker.setDate(todayStr, true);
 
     $('pedidoForm').addEventListener('submit', e => {
       e.preventDefault();
-      const newRecord = {
-        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-        type: 'Pedido especial',
-        key: $('key').value.trim().toUpperCase(),
-        description: $('description').value.trim().toUpperCase(),
-        branch: $('branch').value.trim().toUpperCase(),
-        attention: $('attention').value.trim().toUpperCase(),
-        date: $('operationDate').value || todayStr,
-        arrivalDate: $('arrivalDate').value,
-        supplier: $('supplier').value.trim().toUpperCase(),
-        folio: $('folio').value.trim().toUpperCase(),
-        responsible: $('responsible').value.trim().toUpperCase(),
-        status: $('status').value.trim().toUpperCase(),
-        ticket: $('ticket').value.trim().toUpperCase(),
-        comment: $('comment').value.trim().toUpperCase()
-      };
+      const key = $('key').value.trim().toUpperCase();
+      const description = $('description').value.trim().toUpperCase();
+      const branch = $('branch').value.trim().toUpperCase();
+      const attention = $('attention').value.trim().toUpperCase();
+      const opDate = $('operationDate').value || todayStr;
+      const arrivalDate = $('arrivalDate').value;
+      const supplier = $('supplier').value.trim().toUpperCase();
+      const folio = $('folio').value.trim().toUpperCase();
+      const responsible = $('responsible').value.trim().toUpperCase();
+      const status = $('status').value.trim().toUpperCase();
+      const ticket = $('ticket').value.trim().toUpperCase();
+      const comment = $('comment').value.trim().toUpperCase();
 
-      records.unshift(newRecord);
-      saveRecords();
+      if (editingPedidoId) {
+        const target = records.find(item => item.id === editingPedidoId);
+        if (target) {
+          target.key = key;
+          target.description = description;
+          target.branch = branch;
+          target.attention = attention;
+          target.date = opDate;
+          target.arrivalDate = arrivalDate;
+          target.supplier = supplier;
+          target.folio = folio;
+          target.responsible = responsible;
+          target.status = status;
+          target.ticket = ticket;
+          target.comment = comment;
+          saveRecords();
+        }
+        resetPedidoForm();
+        alert('¡Pedido actualizado correctamente!');
+      } else {
+        const newRecord = {
+          id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+          type: 'Pedido especial',
+          key,
+          description,
+          branch,
+          attention,
+          date: opDate,
+          arrivalDate,
+          supplier,
+          folio,
+          responsible,
+          status,
+          ticket,
+          comment
+        };
 
-      ['key', 'description', 'branch', 'attention', 'supplier', 'folio', 'responsible', 'status', 'ticket', 'comment'].forEach(id => {
-        if ($(id)) $(id).value = '';
-      });
-      opDatePicker.setDate(todayStr, true);
-      arrivalDatePicker.setDate(todayStr, true);
+        records.unshift(newRecord);
+        saveRecords();
+        resetPedidoForm();
+      }
+
       pedidosPage = 1;
       renderPedidos();
     });
+
+    if ($('cancelEditBtn')) {
+      $('cancelEditBtn').onclick = () => {
+        resetPedidoForm();
+      };
+    }
 
     if ($('prevPedidos')) $('prevPedidos').onclick = () => { if (pedidosPage > 1) { pedidosPage--; renderPedidos(); } };
     if ($('nextPedidos')) $('nextPedidos').onclick = () => { pedidosPage++; renderPedidos(); };
@@ -236,7 +280,20 @@
     renderPedidos();
   }
 
-  function renderPedidos() {
+  function resetPedidoForm() {
+    editingPedidoId = null;
+    ['key', 'description', 'branch', 'attention', 'supplier', 'folio', 'responsible', 'ticket', 'comment'].forEach(id => {
+      if ($(id)) $(id).value = '';
+    });
+    if ($('status')) $('status').value = 'PENDIENTE';
+    if (opDatePickerPedido) opDatePickerPedido.setDate(todayStr, true);
+    if (arrivalDatePicker) arrivalDatePicker.setDate(todayStr, true);
+    if ($('pedidoSubmitBtn')) $('pedidoSubmitBtn').textContent = 'Guardar Pedido';
+    if ($('cancelEditBtn')) $('cancelEditBtn').classList.add('hidden');
+    if ($('entryError')) $('entryError').textContent = '';
+  }
+
+    function renderPedidos() {
     const pedidosList = records.filter(r => r.type === 'Pedido especial');
     const totalPages = Math.ceil(pedidosList.length / PAGE_SIZE) || 1;
     if (pedidosPage > totalPages) pedidosPage = totalPages;
@@ -255,6 +312,18 @@
     toRender.forEach(r => {
       const tr = document.createElement('tr');
       tr.className = 'hover:bg-slate-800/40 transition-colors';
+
+      // Definir color de la etiqueta según el estado guardado
+      const st = (r.status || 'PENDIENTE').toUpperCase();
+      let statusBadgeClass = 'bg-slate-800 text-slate-300 border-slate-700';
+      if (st.includes('PENDIENTE')) {
+        statusBadgeClass = 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+      } else if (st.includes('COMPLETADO')) {
+        statusBadgeClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+      } else if (st.includes('DEVOLUCIÓN') || st.includes('DEVOLUCION')) {
+        statusBadgeClass = 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+      }
+
       tr.innerHTML = `
         <td class="p-3 font-medium text-white uppercase">${r.key || ''}</td>
         <td class="p-3 text-slate-300 uppercase">${r.description || ''}</td>
@@ -265,23 +334,55 @@
         <td class="p-3 text-slate-300 uppercase">${r.supplier || ''}</td>
         <td class="p-3 text-slate-300 uppercase">${r.folio || ''}</td>
         <td class="p-3 text-slate-300 uppercase">${r.responsible || ''}</td>
-        <td class="p-3 text-slate-300 uppercase">${r.status || ''}</td>
+        <td class="p-3 uppercase"><span class="px-2.5 py-1 rounded-lg border text-[11px] font-semibold inline-block ${statusBadgeClass}">${st}</span></td>
         <td class="p-3 text-slate-300 uppercase">${r.ticket || ''}</td>
         <td class="p-3 text-slate-300 uppercase">${r.comment || ''}</td>
       `;
 
-      const tdAction = document.createElement('td'); tdAction.className = 'p-3 text-right';
-      const del = document.createElement('button');
-      del.className = 'px-2.5 py-1 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 border border-rose-500/30 rounded-lg transition';
-      del.textContent = 'Eliminar';
-      del.onclick = () => {
+      // Columna de Acciones (Editar y Eliminar)
+      const tdAction = document.createElement('td'); 
+      tdAction.className = 'p-3 text-right whitespace-nowrap';
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'px-2.5 py-1 text-xs font-semibold text-sky-400 hover:bg-sky-500/10 border border-sky-500/30 rounded-lg transition mr-1.5';
+      editBtn.textContent = 'Editar';
+      editBtn.onclick = () => {
+        $('key').value = r.key || '';
+        $('description').value = r.description || '';
+        $('branch').value = r.branch || '';
+        $('attention').value = r.attention || '';
+        if (opDatePickerPedido) opDatePickerPedido.setDate(r.date || todayStr, true);
+        if (arrivalDatePicker) arrivalDatePicker.setDate(r.arrivalDate || todayStr, true);
+        $('supplier').value = r.supplier || '';
+        $('folio').value = r.folio || '';
+        $('responsible').value = r.responsible || '';
+        $('status').value = r.status || 'PENDIENTE';
+        $('ticket').value = r.ticket || '';
+        $('comment').value = r.comment || '';
+
+        editingPedidoId = r.id;
+        if ($('pedidoSubmitBtn')) $('pedidoSubmitBtn').textContent = 'Actualizar Pedido';
+        if ($('cancelEditBtn')) $('cancelEditBtn').classList.remove('hidden');
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'px-2.5 py-1 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 border border-rose-500/30 rounded-lg transition';
+      delBtn.textContent = 'Eliminar';
+      delBtn.onclick = () => {
         if (confirm('¿Eliminar pedido?')) {
           records = records.filter(x => x.id !== r.id);
           saveRecords();
           renderPedidos();
         }
       };
-      tdAction.appendChild(del); tr.appendChild(tdAction); tbody.appendChild(tr);
+
+      tdAction.appendChild(editBtn);
+      tdAction.appendChild(delBtn);
+      tr.appendChild(tdAction); 
+      
+      tbody.appendChild(tr);
     });
   }
 
@@ -345,6 +446,7 @@
     });
   }
 
+  // --- MÓDULO 4: DASHBOARD & REPORTE ESTADÍSTICO ---
   function initDashboard() {
     const cotizList = records.filter(r => r.type === 'Cotización');
 
@@ -375,7 +477,7 @@
         if (cotiz.length) downloadJson(cotiz, 'cotizaciones.json');
         if (pedidos.length) downloadJson(pedidos, 'pedidos-especiales.json');
         if (ml.length) downloadJson(ml, 'mercado-libre.json');
-        alert('Archivos JSON exportados correctamente con todos los campos actualizados.');
+        alert('Archivos JSON exportados correctamente.');
       };
     }
 
@@ -398,7 +500,7 @@
             });
           } catch (err) { console.error(err); }
         }
-        records = all; saveRecords(); alert('¡Importación completada exitosamente!'); location.reload();
+        records = all; saveRecords(); alert('¡Importación completada!'); location.reload();
       };
     }
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pedidos Especiales | Cotizaciones</title>
+  <title>Pedidos Especiales | Autopartes Toro</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -18,6 +18,7 @@
   <div class="min-h-screen w-full flex flex-col lg:flex-row bg-slate-950 relative">
     <button id="mobileToggle" class="lg:hidden absolute top-4 left-4 z-50 p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-brand-400"><i class="fa-solid fa-bars"></i></button>
 
+    <!-- SIDEBAR -->
     <aside id="sidebar" class="w-20 bg-slate-900/90 border-r border-slate-800/80 p-4 flex flex-col justify-between shrink-0 transition-all duration-300 fixed lg:static inset-y-0 left-0 z-40 -translate-x-full lg:translate-x-0">
       <div class="space-y-6">
         <div class="flex items-center justify-between px-1 py-1">
@@ -51,43 +52,56 @@
 
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-950/70 z-30 hidden lg:hidden"></div>
 
+    <!-- SECCIÓN PEDIDOS ESPECIALES -->
     <main class="flex-1 flex flex-col overflow-y-auto p-4 sm:p-8 space-y-6 pt-16 lg:pt-8">
       <div class="flex items-center justify-between pb-2 border-b border-slate-800/50">
         <div>
           <h1 class="text-3xl font-extrabold text-white">Pedidos Especiales</h1>
+          <p class="text-slate-400 text-sm mt-1">Gestión detallada de encargos, estatus de atención y edición de registros.</p>
         </div>
       </div>
 
       <div class="space-y-6">
         
+        <!-- FORMULARIO -->
         <section class="p-6 rounded-2xl bg-slate-900/70 border border-slate-800/80">
-          <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-plus text-brand-400 mr-2"></i> Nuevo Pedido Especial</h3>
+          <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-plus text-brand-400 mr-2"></i> Gestión de Pedido Especial</h3>
           <form id="pedidoForm" class="space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Clave</label><input id="key" required placeholder="" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
-              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Descripción</label><input id="description" required placeholder="" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
-              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Sucursal</label><input id="branch" required placeholder="" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
-              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Atención</label><input id="attention" required placeholder="" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
+              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Clave</label><input id="key" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
+              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Descripción</label><input id="description" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
+              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Sucursal</label><input id="branch" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
+              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Atención</label><input id="attention" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
               <div><label class="block text-xs font-semibold text-slate-300 mb-1">Fecha Pedido</label><input type="text" id="operationDate" required readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white cursor-pointer"></div>
               <div><label class="block text-xs font-semibold text-slate-300 mb-1">Fecha Llegada</label><input type="text" id="arrivalDate" readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white cursor-pointer"></div>
-              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Proveedor</label><input id="supplier" required placeholder="" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
-              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Folio</label><input id="folio" required placeholder="" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
-              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Responsable</label><input id="responsible" required placeholder="" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
-              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Estado</label><input id="status" required placeholder="" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
-              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Ticket</label><input id="ticket" required placeholder="" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
-              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Comentario</label><input id="comment" placeholder="" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
+              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Proveedor</label><input id="supplier" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
+              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Folio</label><input id="folio" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
+              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Responsable</label><input id="responsible" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Estado</label>
+                <select id="status" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400 cursor-pointer">
+                  <option value="PENDIENTE">PENDIENTE</option>
+                  <option value="COMPLETADO">COMPLETADO</option>
+                  <option value="DEVOLUCIÓN">DEVOLUCIÓN</option>
+                </select>
+              </div>
+              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Ticket</label><input id="ticket" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
+              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Comentario</label><input id="comment" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
             </div>
-            <div class="pt-2 flex justify-end">
-              <button class="px-6 py-2.5 bg-brand-400 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl transition">Guardar Pedido</button>
+            
+            <div class="pt-2 flex items-center justify-end gap-2">
+              <button type="button" id="cancelEditBtn" class="hidden px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition">Cancelar</button>
+              <button type="submit" id="pedidoSubmitBtn" class="px-6 py-2.5 bg-brand-400 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl transition">Guardar Pedido</button>
             </div>
             <div id="entryError" class="text-red-400 text-xs"></div>
           </form>
         </section>
 
+        <!-- TABLA DE HISTORIAL -->
         <section class="p-6 rounded-2xl bg-slate-900/70 border border-slate-800/80 flex flex-col">
           <h3 class="text-base font-bold text-white mb-4">Historial de Pedidos Especiales</h3>
           <div class="w-full overflow-x-auto rounded-xl border border-slate-800">
-            <table class="w-full text-left text-xs border-collapse min-w-[1100px]">
+            <table class="w-full text-left text-xs border-collapse min-w-[1200px]">
               <thead>
                 <tr class="bg-slate-950/80 border-b border-slate-800 text-slate-400 uppercase text-[10px]">
                   <th class="p-3">Clave</th>
