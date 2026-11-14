@@ -10,7 +10,6 @@
   const isSessionActive = localStorage.getItem(KEYS.session) === 'true';
   const user = getUser();
 
-  // === PROTECCIÓN DE RUTAS (REDIRECCIÓN A ACCESO DENEGADO) ===
   const path = window.location.pathname;
   const isLoginPage = Boolean($('authView'));
   const isDeniedPage = path.endsWith('acceso-denegado.html') || path.includes('acceso-denegado');
@@ -34,7 +33,6 @@
 
   records = getRecords();
 
-  // Sidebar collapse state (collapsed by default)
   const sidebar = $('sidebar'), overlay = $('sidebarOverlay');
   let isCollapsed = true;
 
@@ -63,7 +61,6 @@
     overlay.onclick = () => { sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden'); };
   }
 
-  // Auth logic & persistent session control
   if ($('authView')) {
     if (!user || !isSessionActive) {
       $('authView').classList.remove('hidden');
@@ -118,7 +115,6 @@
     };
   }
 
-  // --- MÓDULO 1: COTIZACIONES ---
   if ($('cotizForm')) {
     const opDatePicker = flatpickr("#operationDate", { locale: "es", defaultDate: todayStr, dateFormat: "Y-m-d" });
     opDatePicker.setDate(todayStr, true);
@@ -197,7 +193,6 @@
     });
   }
 
-  // --- MÓDULO 2: PEDIDOS ESPECIALES ---
   if ($('pedidoForm')) {
     const opDatePicker = flatpickr("#operationDate", { locale: "es", defaultDate: todayStr, dateFormat: "Y-m-d" });
     opDatePicker.setDate(todayStr, true);
@@ -290,7 +285,6 @@
     });
   }
 
-  // --- MÓDULO 3: MERCADO LIBRE ---
   if ($('mlForm')) {
     $('mlForm').addEventListener('submit', e => {
       e.preventDefault();
@@ -351,7 +345,6 @@
     });
   }
 
-  // --- MÓDULO 4: DASHBOARD & REPORTE ESTADÍSTICO ---
   function initDashboard() {
     const cotizList = records.filter(r => r.type === 'Cotización');
 
