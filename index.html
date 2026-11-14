@@ -3,16 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard | Autopartes Toro</title>
+  <title>Dashboard | Cotizaciones</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Flatpickr -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
-  <!-- Chart.js & html2canvas -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
@@ -21,7 +18,6 @@
 </head>
 <body class="min-h-full flex flex-col font-sans bg-slate-950 text-slate-100 antialiased selection:bg-brand-400 selection:text-slate-950">
 
-  <!-- VISTA DE AUTENTICACIÓN -->
   <section id="authView" class="min-h-screen w-full grid grid-cols-1 lg:grid-cols-12 bg-slate-950 font-sans">
     <aside class="hidden lg:flex lg:col-span-7 flex-col justify-between p-16 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-r border-slate-800/50 relative overflow-hidden">
       <div class="absolute -top-40 -left-40 w-[500px] h-[500px] bg-brand-400/15 rounded-full blur-[128px] pointer-events-none"></div>
@@ -90,11 +86,9 @@
     </main>
   </section>
 
-  <!-- VISTA PRINCIPAL (DASHBOARD) -->
   <section id="appView" class="hidden min-h-screen w-full flex flex-col lg:flex-row bg-slate-950 relative">
     <button id="mobileToggle" class="lg:hidden absolute top-4 left-4 z-50 p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-brand-400"><i class="fa-solid fa-bars"></i></button>
 
-    <!-- SIDEBAR -->
     <aside id="sidebar" class="w-20 bg-slate-900/90 border-r border-slate-800/80 p-4 flex flex-col justify-between shrink-0 transition-all duration-300 fixed lg:static inset-y-0 left-0 z-40 -translate-x-full lg:translate-x-0">
       <div class="space-y-6">
         <div class="flex items-center justify-between px-1 py-1">
@@ -132,12 +126,11 @@
 
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-950/70 z-30 hidden lg:hidden"></div>
 
-    <!-- CONTENIDO PRINCIPAL -->
     <main class="flex-1 flex flex-col overflow-y-auto p-4 sm:p-8 space-y-6 pt-16 lg:pt-8">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-800/50">
         <div>
-          <h1 class="text-3xl font-extrabold text-white tracking-tight">Dashboard & Analítica Estadística</h1>
-          <p class="text-slate-400 text-sm mt-1">Control de cotizaciones con media, desviación estándar, varianza y desglose diario estilo Excel.</p>
+          <h1 class="text-3xl font-extrabold text-white tracking-tight">Dashboard</h1>
+          <p class="text-slate-400 text-sm mt-1">Control de cotizaciones.</p>
         </div>
         <div class="flex items-center gap-2.5 flex-wrap">
           <button id="exportBtn" class="px-3.5 py-2 rounded-xl border border-slate-700 hover:border-slate-500 text-slate-200 text-xs font-semibold bg-slate-900/40"><i class="fa-solid fa-download mr-1.5"></i> Exportar JSON</button>
@@ -146,10 +139,9 @@
         </div>
       </div>
 
-      <!-- TARJETAS DE RESUMEN ESTADÍSTICO (EXCEL STYLE) -->
       <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
         <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80">
-          <small class="text-slate-400 text-xs font-medium block">Conteo (N)</small>
+          <small class="text-slate-400 text-xs font-medium block">Conteo</small>
           <strong id="statN" class="text-2xl font-black text-white mt-1 block">0</strong>
         </div>
         <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80">
@@ -157,24 +149,23 @@
           <strong id="statSum" class="text-2xl font-black text-white mt-1 block">0 min</strong>
         </div>
         <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80">
-          <small class="text-slate-400 text-xs font-medium block">Media / Promedio (x̄)</small>
+          <small class="text-slate-400 text-xs font-medium block">Media / Promedio</small>
           <strong id="statMean" class="text-2xl font-black text-brand-400 mt-1 block">0 min</strong>
         </div>
         <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80">
-          <small class="text-slate-400 text-xs font-medium block">Varianza (s²)</small>
+          <small class="text-slate-400 text-xs font-medium block">Varianza</small>
           <strong id="statVariance" class="text-2xl font-black text-white mt-1 block">0</strong>
         </div>
         <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80">
-          <small class="text-slate-400 text-xs font-medium block">Desviación Estándar (s)</small>
+          <small class="text-slate-400 text-xs font-medium block">Desviación Estándar</small>
           <strong id="statStdDev" class="text-2xl font-black text-emerald-400 mt-1 block">0</strong>
         </div>
       </div>
 
-      <!-- SECCIÓN DE REPORTE Y GRÁFICA -->
       <div class="p-6 rounded-2xl bg-slate-900/90 border border-brand-400/30 shadow-lg space-y-5">
         <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
           <div>
-            <span class="text-xs font-bold uppercase text-brand-400">Gráfica de Tendencia y Dispersión</span>
+            <span class="text-xs font-bold uppercase text-brand-400">Gráfica</span>
             <div class="flex items-center gap-2 mt-1">
               <input type="text" id="reportRangeSelector" readonly placeholder="Filtrar por rango opcional" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white cursor-pointer min-w-[200px]">
               <span id="weeklyRangeTitle" class="text-xs text-slate-300 font-medium">Mes en curso</span>
@@ -192,53 +183,15 @@
         </div>
       </div>
 
-      <!-- TABLA ESTILIZADA POR DÍAS (ESTILO EXCEL) -->
       <div class="p-6 rounded-2xl bg-slate-900/90 border border-slate-800/80 shadow-lg space-y-4">
         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
           <h3 class="text-base font-bold text-white"><i class="fa-solid fa-table-cells text-brand-400 mr-2"></i> Desglose Detallado por Días y Parámetros Estadísticos (xi, x̄, xi-x̄)</h3>
         </div>
         <div id="excelTablesContainer" class="space-y-6">
-          <!-- Se llenará dinámicamente desde app.js -->
         </div>
       </div>
     </main>
   </section>
-
-  <!-- Script Typewriter -->
-  <script>
-    (function() {
-      const line1Text = "Autopartes, Toro";
-      const line2Text = " Dept. Cotizaciones.";
-      const typingSpeed = 100, erasingSpeed = 60, pauseTime = 2000;
-
-      function iniciarEfectoTypewriter() {
-        const elLine1 = document.getElementById('typedLine1');
-        const elLine2 = document.getElementById('typedLine2');
-        if (!elLine1 || !elLine2) return;
-
-        let i = 0, j = 0, isDeleting = false;
-        function loop() {
-          if (!isDeleting && i <= line1Text.length) {
-            elLine1.textContent = line1Text.substring(0, i); i++; setTimeout(loop, typingSpeed);
-          } else if (!isDeleting && j <= line2Text.length) {
-            elLine2.textContent = line2Text.substring(0, j); j++; setTimeout(loop, typingSpeed);
-          } else if (!isDeleting && i > line1Text.length && j > line2Text.length) {
-            isDeleting = true; setTimeout(loop, pauseTime);
-          } else if (isDeleting && j > 0) {
-            j--; elLine2.textContent = line2Text.substring(0, j); setTimeout(loop, erasingSpeed);
-          } else if (isDeleting && i > 0) {
-            i--; elLine1.textContent = line1Text.substring(0, i); setTimeout(loop, erasingSpeed);
-          } else if (isDeleting && i === 0 && j === 0) {
-            isDeleting = false; setTimeout(loop, 500);
-          }
-        }
-        loop();
-      }
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciarEfectoTypewriter);
-      else iniciarEfectoTypewriter();
-    })();
-  </script>
-
   <script src="app.js"></script>
 </body>
 </html>

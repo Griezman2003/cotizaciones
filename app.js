@@ -106,13 +106,11 @@
     }
   }
 
-  // Update user info on subpages if logged in
   if (user && $('welcomeUser')) {
     $('welcomeUser').textContent = user.username;
     if ($('userInitial')) $('userInitial').textContent = user.username.charAt(0).toUpperCase();
   }
 
-  // Logout closes session WITHOUT deleting user account credentials
   if ($('logout')) {
     $('logout').onclick = () => {
       localStorage.removeItem(KEYS.session);
@@ -128,6 +126,7 @@
     $('cotizForm').addEventListener('submit', e => {
       e.preventDefault();
       const key = $('key').value.trim().toUpperCase();
+      const entity = $('entity').value.trim().toUpperCase();
       const minutes = Number($('minutes').value);
       const opDate = $('operationDate').value || todayStr;
 
@@ -137,13 +136,14 @@
         id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
         type: 'Cotización',
         key,
+        entity,
         minutes,
         date: opDate
       };
 
       records.unshift(newRecord);
       saveRecords();
-      $('key').value = ''; $('minutes').value = ''; $('entryError').textContent = '';
+      $('key').value = ''; $('entity').value = ''; $('minutes').value = ''; $('entryError').textContent = '';
       opDatePicker.setDate(todayStr, true);
       cotizPage = 1;
       renderCotizaciones();
@@ -174,7 +174,12 @@
     toRender.forEach(r => {
       const tr = document.createElement('tr');
       tr.className = 'hover:bg-slate-800/40 transition-colors';
-      tr.innerHTML = `<td class="p-3.5 text-slate-300">${r.date || todayStr}</td><td class="p-3.5 font-medium text-white uppercase">${r.key}</td><td class="p-3.5 text-brand-400 font-semibold">${Number(r.minutes).toFixed(1)} min</td>`;
+      tr.innerHTML = `
+        <td class="p-3.5 text-slate-300">${r.date || todayStr}</td>
+        <td class="p-3.5 font-medium text-white uppercase">${r.key}</td>
+        <td class="p-3.5 text-slate-300 uppercase">${r.entity || ''}</td>
+        <td class="p-3.5 text-brand-400 font-semibold">${Number(r.minutes).toFixed(1)} min</td>
+      `;
       const tdAction = document.createElement('td'); tdAction.className = 'p-3.5 text-right';
       const del = document.createElement('button');
       del.className = 'px-2.5 py-1 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 border border-rose-500/30 rounded-lg transition';
@@ -201,28 +206,29 @@
 
     $('pedidoForm').addEventListener('submit', e => {
       e.preventDefault();
-      const key = $('key').value.trim().toUpperCase();
-      const description = $('description').value.trim().toUpperCase();
-      const supplier = $('supplier').value.trim().toUpperCase();
-      const arrivalDate = $('arrivalDate').value;
-      const responsible = $('responsible').value.trim().toUpperCase();
-      const opDate = $('operationDate').value || todayStr;
-
       const newRecord = {
         id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
         type: 'Pedido especial',
-        key,
-        description,
-        supplier,
-        arrivalDate,
-        responsible,
-        date: opDate,
-        completed: false
+        key: $('key').value.trim().toUpperCase(),
+        description: $('description').value.trim().toUpperCase(),
+        branch: $('branch').value.trim().toUpperCase(),
+        attention: $('attention').value.trim().toUpperCase(),
+        date: $('operationDate').value || todayStr,
+        arrivalDate: $('arrivalDate').value,
+        supplier: $('supplier').value.trim().toUpperCase(),
+        folio: $('folio').value.trim().toUpperCase(),
+        responsible: $('responsible').value.trim().toUpperCase(),
+        status: $('status').value.trim().toUpperCase(),
+        ticket: $('ticket').value.trim().toUpperCase(),
+        comment: $('comment').value.trim().toUpperCase()
       };
 
       records.unshift(newRecord);
       saveRecords();
-      $('key').value = ''; $('description').value = ''; $('supplier').value = ''; $('responsible').value = '';
+
+      ['key', 'description', 'branch', 'attention', 'supplier', 'folio', 'responsible', 'status', 'ticket', 'comment'].forEach(id => {
+        if ($(id)) $(id).value = '';
+      });
       opDatePicker.setDate(todayStr, true);
       arrivalDatePicker.setDate(todayStr, true);
       pedidosPage = 1;
@@ -254,32 +260,22 @@
     toRender.forEach(r => {
       const tr = document.createElement('tr');
       tr.className = 'hover:bg-slate-800/40 transition-colors';
-      tr.innerHTML = `<td class="p-3.5 font-medium text-white uppercase">${r.key}</td><td class="p-3.5 text-slate-300 uppercase">${r.description || ''}</td><td class="p-3.5 text-slate-300 uppercase">${r.supplier || ''}</td>`;
+      tr.innerHTML = `
+        <td class="p-3 font-medium text-white uppercase">${r.key || ''}</td>
+        <td class="p-3 text-slate-300 uppercase">${r.description || ''}</td>
+        <td class="p-3 text-slate-300 uppercase">${r.branch || ''}</td>
+        <td class="p-3 text-slate-300 uppercase">${r.attention || ''}</td>
+        <td class="p-3 text-slate-300">${r.date || todayStr}</td>
+        <td class="p-3 text-emerald-400 font-medium">${r.arrivalDate || ''}</td>
+        <td class="p-3 text-slate-300 uppercase">${r.supplier || ''}</td>
+        <td class="p-3 text-slate-300 uppercase">${r.folio || ''}</td>
+        <td class="p-3 text-slate-300 uppercase">${r.responsible || ''}</td>
+        <td class="p-3 text-slate-300 uppercase">${r.status || ''}</td>
+        <td class="p-3 text-slate-300 uppercase">${r.ticket || ''}</td>
+        <td class="p-3 text-slate-300 uppercase">${r.comment || ''}</td>
+      `;
 
-      const tdAttended = document.createElement('td'); tdAttended.className = 'p-3.5 text-center';
-      const label = document.createElement('label'); label.className = 'relative inline-flex items-center cursor-pointer';
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.checked = Boolean(r.completed);
-      checkbox.className = 'sr-only peer';
-
-      checkbox.onchange = (e) => {
-        const isChecked = e.target.checked;
-        r.completed = isChecked;
-        const target = records.find(item => item.id === r.id);
-        if (target) {
-          target.completed = isChecked;
-          saveRecords();
-        }
-      };
-
-      const divSlider = document.createElement('div');
-      divSlider.className = "w-9 h-5 bg-slate-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-400";
-      label.appendChild(checkbox); label.appendChild(divSlider); tdAttended.appendChild(label); tr.appendChild(tdAttended);
-
-      tr.innerHTML += `<td class="p-3.5 text-slate-300">${r.date || todayStr}</td><td class="p-3.5 text-emerald-400 font-medium">${r.arrivalDate || ''}</td><td class="p-3.5 text-slate-300 uppercase">${r.responsible || ''}</td>`;
-
-      const tdAction = document.createElement('td'); tdAction.className = 'p-3.5 text-right';
+      const tdAction = document.createElement('td'); tdAction.className = 'p-3 text-right';
       const del = document.createElement('button');
       del.className = 'px-2.5 py-1 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 border border-rose-500/30 rounded-lg transition';
       del.textContent = 'Eliminar';
@@ -355,42 +351,27 @@
     });
   }
 
-  // --- MÓDULO 4: DASHBOARD & REPORTE ESTADÍSTICO (ESTILO EXCEL) ---
+  // --- MÓDULO 4: DASHBOARD & REPORTE ESTADÍSTICO ---
   function initDashboard() {
     const cotizList = records.filter(r => r.type === 'Cotización');
 
-    // Cálculos Estadísticos Globales (Estilo Excel)
-    const N = cotizList.length;
-    const suma = cotizList.reduce((acc, r) => acc + Number(r.minutes), 0);
-    const promedio = N > 0 ? suma / N : 0;
-    const varianza = N > 0 ? cotizList.reduce((acc, r) => acc + Math.pow(Number(r.minutes) - promedio, 2), 0) / N : 0;
-    const desvStd = Math.sqrt(varianza);
-
-    // Pintar tarjetas de estadísticas
-    if ($('statN')) $('statN').textContent = N;
-    if ($('statSum')) $('statSum').textContent = suma.toFixed(1) + ' min';
-    if ($('statMean')) $('statMean').textContent = promedio.toFixed(2) + ' min';
-    if ($('statVariance')) $('statVariance').textContent = varianza.toFixed(2);
-    if ($('statStdDev')) $('statStdDev').textContent = desvStd.toFixed(2);
-
     const firstDayMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`;
-    renderReport(firstDayMonth, todayStr, promedio, desvStd);
-    if ($('weeklyRangeTitle')) $('weeklyRangeTitle').textContent = `Mes en curso (${firstDayMonth} al ${todayStr})`;
+    const defaultStart = firstDayMonth;
+    const defaultEnd = todayStr;
+
+    updateDashboardMetrics(cotizList, defaultStart, defaultEnd);
 
     flatpickr("#reportRangeSelector", {
-      mode: "range", locale: "es", dateFormat: "Y-m-d", defaultDate: [firstDayMonth, todayStr],
+      mode: "range", locale: "es", dateFormat: "Y-m-d", defaultDate: [defaultStart, defaultEnd],
       onChange: function(selectedDates, dateStr, instance) {
         if (selectedDates.length === 2) {
           const start = instance.formatDate(selectedDates[0], "Y-m-d");
           const end = instance.formatDate(selectedDates[1], "Y-m-d");
-          renderReport(start, end, promedio, desvStd);
-          $('weeklyRangeTitle').textContent = `Rango personalizado`;
+          updateDashboardMetrics(cotizList, start, end);
+          $('weeklyRangeTitle').textContent = `Rango personalizado (${start} al ${end})`;
         }
       }
     });
-
-    // Renderizar Tablas por Días de la Semana (Estilo Excel)
-    renderExcelDaysTables(cotizList, promedio);
 
     if ($('exportBtn')) {
       $('exportBtn').onclick = () => {
@@ -401,7 +382,7 @@
         if (cotiz.length) downloadJson(cotiz, 'cotizaciones.json');
         if (pedidos.length) downloadJson(pedidos, 'pedidos-especiales.json');
         if (ml.length) downloadJson(ml, 'mercado-libre.json');
-        alert('Archivos JSON exportados correctamente.');
+        alert('Archivos JSON exportados correctamente con todos los campos actualizados.');
       };
     }
 
@@ -424,18 +405,18 @@
             });
           } catch (err) { console.error(err); }
         }
-        records = all; saveRecords(); alert('¡Importación completada!'); location.reload();
+        records = all; saveRecords(); alert('¡Importación completada exitosamente!'); location.reload();
       };
     }
 
     if ($('purgeBtn')) {
       $('purgeBtn').onclick = () => {
-        const dias = prompt('¿Cuántos días conservar?', '90');
-        if (!dias) return;
-        const limit = new Date(); limit.setDate(limit.getDate() - parseInt(dias, 10));
-        const limitStr = getLocalDateString(limit);
-        records = records.filter(r => (r.date || todayStr) >= limitStr);
-        saveRecords(); location.reload();
+        if (confirm('¿Estás seguro de eliminar todos los registros guardados?')) {
+          records = [];
+          saveRecords();
+          alert('¡Se han borrado todos los registros exitosamente!');
+          location.reload();
+        }
       };
     }
 
@@ -447,18 +428,59 @@
     }
   }
 
-  function renderExcelDaysTables(cotizList, globalMean) {
+  function updateDashboardMetrics(cotizList, startDate, endDate) {
+    const periodCotiz = cotizList.filter(r => {
+      const d = r.date || todayStr;
+      return d >= startDate && d <= endDate;
+    });
+
+    const N = periodCotiz.length;
+    const suma = periodCotiz.reduce((acc, r) => acc + Number(r.minutes), 0);
+    const promedio = N > 0 ? suma / N : 0;
+    const varianza = N > 0 ? periodCotiz.reduce((acc, r) => acc + Math.pow(Number(r.minutes) - promedio, 2), 0) / N : 0;
+    const desvStd = Math.sqrt(varianza);
+
+    if ($('statN')) $('statN').textContent = N;
+    if ($('statSum')) $('statSum').textContent = suma.toFixed(1) + ' min';
+    if ($('statMean')) $('statMean').textContent = promedio.toFixed(2) + ' min';
+    if ($('statVariance')) $('statVariance').textContent = varianza.toFixed(2);
+    if ($('statStdDev')) $('statStdDev').textContent = desvStd.toFixed(2);
+
+    if ($('weeklyRangeTitle')) {
+      $('weeklyRangeTitle').textContent = `Mes en curso (${startDate} al ${endDate})`;
+    }
+
+    const explanationBox = $('chartExplanationBox');
+    if (explanationBox) {
+      const highValues = [...new Set(periodCotiz.map(r => Number(r.minutes)))]
+        .filter(m => m > (promedio + desvStd))
+        .sort((a, b) => a - b);
+      
+      const highStr = highValues.length > 0 ? highValues.join(', ') + ' min' : 'ninguno';
+
+      explanationBox.innerHTML = `
+        <p>- La desviación estándar de los <strong>${N}</strong> datos es <strong>${desvStd.toFixed(2)} min</strong></p>
+        <p>- Esto indica que, en términos generales, los datos se encuentran aproximadamente a <strong>${desvStd.toFixed(2)} min</strong> de distancia de la media (<strong>${promedio.toFixed(2)} min</strong>).</p>
+        <p>- En resumen: <strong>${desvStd.toFixed(2)} min</strong> es una dispersión ${desvStd > 5 ? 'considerable' : 'moderada'} ya que varios valores están alejados del promedio: <strong>${highStr}</strong>.</p>
+      `;
+    }
+
+    renderReport(periodCotiz, promedio, desvStd);
+    renderExcelDaysTables(periodCotiz, promedio);
+  }
+
+  function renderExcelDaysTables(periodCotiz, globalMean) {
     const container = $('excelTablesContainer');
     if (!container) return;
     container.innerHTML = '';
 
-    if (cotizList.length === 0) {
-      container.innerHTML = '<div class="text-center text-slate-500 py-6 text-sm">No hay registros de cotizaciones para mostrar en tablas diarias.</div>';
+    if (periodCotiz.length === 0) {
+      container.innerHTML = '<div class="text-center text-slate-500 py-6 text-sm">No hay registros de cotizaciones en este rango de fechas.</div>';
       return;
     }
 
     const groupedByDate = {};
-    cotizList.forEach(r => {
+    periodCotiz.forEach(r => {
       const d = r.date || todayStr;
       if (!groupedByDate[d]) groupedByDate[d] = [];
       groupedByDate[d].push(r);
@@ -485,6 +507,7 @@
               <tr class="bg-slate-900 border-b border-slate-800 text-slate-400 uppercase text-[10px]">
                 <th class="p-2.5">N</th>
                 <th class="p-2.5">Clave (xi ref)</th>
+                <th class="p-2.5">Entidad</th>
                 <th class="p-2.5">Minutos (xi)</th>
                 <th class="p-2.5">Media (x̄)</th>
                 <th class="p-2.5">Desviación (xi - x̄)</th>
@@ -502,6 +525,7 @@
           <tr class="hover:bg-slate-900/50 transition">
             <td class="p-2.5 text-slate-400 font-mono">${idx + 1}</td>
             <td class="p-2.5 text-white font-semibold uppercase">${r.key}</td>
+            <td class="p-2.5 text-slate-300 uppercase">${r.entity || ''}</td>
             <td class="p-2.5 text-brand-400 font-bold">${xi.toFixed(1)} min</td>
             <td class="p-2.5 text-slate-300">${globalMean.toFixed(2)}</td>
             <td class="p-2.5 text-slate-300">${diff.toFixed(2)}</td>
@@ -520,16 +544,14 @@
     });
   }
 
-  function renderReport(startRange, endRange, globalMean, globalStd) {
+  function renderReport(periodCotiz, globalMean, globalStd) {
     if (!$('weeklyChart')) return;
-    const periodCotiz = records.filter(r => r.type === 'Cotización' && (r.date || todayStr) >= startRange && (r.date || todayStr) <= endRange);
 
     if (periodCotiz.length === 0) {
       if (weeklyChartInstance) { weeklyChartInstance.destroy(); weeklyChartInstance = null; }
       return;
     }
 
-    // Ordenar cronológicamente para graficar cada cotización en orden
     const sortedCotiz = [...periodCotiz].sort((a, b) => (a.date || todayStr).localeCompare(b.date || todayStr));
 
     const chartLabels = sortedCotiz.map((r, idx) => `#${idx + 1} (${r.key || 'N/A'})`);
@@ -572,7 +594,7 @@
               title: function(context) {
                 const index = context[0].dataIndex;
                 const item = sortedCotiz[index];
-                return `Fecha: ${item.date || todayStr} | Clave: ${item.key}`;
+                return `Fecha: ${item.date || todayStr} | Clave: ${item.key} | Entidad: ${item.entity || 'N/A'}`;
               },
               afterBody: function() {
                 return `Desv. Estándar Global (s): ${globalStd.toFixed(2)} min`;
@@ -593,4 +615,37 @@
     const url = URL.createObjectURL(blob), a = document.createElement('a');
     a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
   }
+
+  (function() {
+    const line1Text = "Autopartes, Toro";
+    const line2Text = " Dept. Cotizaciones.";
+    const typingSpeed = 100, erasingSpeed = 60, pauseTime = 2000;
+
+    function iniciarEfectoTypewriter() {
+      const elLine1 = document.getElementById('typedLine1');
+      const elLine2 = document.getElementById('typedLine2');
+      if (!elLine1 || !elLine2) return;
+
+      let i = 0, j = 0, isDeleting = false;
+      function loop() {
+        if (!isDeleting && i <= line1Text.length) {
+          elLine1.textContent = line1Text.substring(0, i); i++; setTimeout(loop, typingSpeed);
+        } else if (!isDeleting && j <= line2Text.length) {
+          elLine2.textContent = line2Text.substring(0, j); j++; setTimeout(loop, typingSpeed);
+        } else if (!isDeleting && i > line1Text.length && j > line2Text.length) {
+          isDeleting = true; setTimeout(loop, pauseTime);
+        } else if (isDeleting && j > 0) {
+          j--; elLine2.textContent = line2Text.substring(0, j); setTimeout(loop, erasingSpeed);
+        } else if (isDeleting && i > 0) {
+          i--; elLine1.textContent = line1Text.substring(0, i); setTimeout(loop, erasingSpeed);
+        } else if (isDeleting && i === 0 && j === 0) {
+          isDeleting = false; setTimeout(loop, 500);
+        }
+      }
+      loop();
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciarEfectoTypewriter);
+    else iniciarEfectoTypewriter();
+  })();
+    
 })();

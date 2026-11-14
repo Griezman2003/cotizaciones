@@ -3,14 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pedidos Especiales | Autopartes Toro</title>
+  <title>Pedidos Especiales | Cotizaciones</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
     tailwind.config = { theme: { extend: { colors: { brand: { 400: '#4ce0a0', 500: '#22c55e', 950: '#032e1d' } } } } }
   </script>
@@ -19,7 +18,6 @@
   <div class="min-h-screen w-full flex flex-col lg:flex-row bg-slate-950 relative">
     <button id="mobileToggle" class="lg:hidden absolute top-4 left-4 z-50 p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-brand-400"><i class="fa-solid fa-bars"></i></button>
 
-    <!-- SIDEBAR COLAPSADO POR DEFECTO -->
     <aside id="sidebar" class="w-20 bg-slate-900/90 border-r border-slate-800/80 p-4 flex flex-col justify-between shrink-0 transition-all duration-300 fixed lg:static inset-y-0 left-0 z-40 -translate-x-full lg:translate-x-0">
       <div class="space-y-6">
         <div class="flex items-center justify-between px-1 py-1">
@@ -53,44 +51,59 @@
 
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-950/70 z-30 hidden lg:hidden"></div>
 
-    <!-- SECCIÓN PEDIDOS ESPECIALES -->
     <main class="flex-1 flex flex-col overflow-y-auto p-4 sm:p-8 space-y-6 pt-16 lg:pt-8">
       <div class="flex items-center justify-between pb-2 border-b border-slate-800/50">
         <div>
           <h1 class="text-3xl font-extrabold text-white">Pedidos Especiales</h1>
-          <p class="text-slate-400 text-sm mt-1">Gestión de encargos, proveedores y estatus de atención.</p>
+          <p class="text-slate-400 text-sm mt-1">Gestión detallada de encargos y estatus de atención.</p>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <section class="lg:col-span-4 p-6 rounded-2xl bg-slate-900/70 border border-slate-800/80">
+      <div class="space-y-6">
+        
+        <section class="p-6 rounded-2xl bg-slate-900/70 border border-slate-800/80">
           <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-plus text-brand-400 mr-2"></i> Nuevo Pedido Especial</h3>
           <form id="pedidoForm" class="space-y-4">
-            <div><label class="block text-xs font-semibold text-slate-300 mb-1.5">Fecha de Pedido (F. Pedido)</label><input type="text" id="operationDate" required readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white cursor-pointer"></div>
-            <div><label class="block text-xs font-semibold text-slate-300 mb-1.5">Clave</label><input id="key" required placeholder="Ej. P-999" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
-            <div><label class="block text-xs font-semibold text-slate-300 mb-1.5">Descripción</label><input id="description" required placeholder="Ej. Faro delantero" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
-            <div><label class="block text-xs font-semibold text-slate-300 mb-1.5">Proveedor</label><input id="supplier" required placeholder="Ej. Autopartes Morsa" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
-            <div><label class="block text-xs font-semibold text-slate-300 mb-1.5">¿Cuándo llega?</label><input type="text" id="arrivalDate" readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white cursor-pointer"></div>
-            <div><label class="block text-xs font-semibold text-slate-300 mb-1.5">Responsable</label><input id="responsible" required placeholder="Ej. Juan López" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
-            <button class="w-full py-3 bg-brand-400 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl transition">Guardar Pedido</button>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Clave</label><input id="key" required placeholder="Ej. P-999" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
+              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Descripción</label><input id="description" required placeholder="Ej. Faro delantero" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
+              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Sucursal</label><input id="branch" required placeholder="Ej. Matriz" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
+              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Atención</label><input id="attention" required placeholder="Ej. Mostrador" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
+              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Fecha Pedido</label><input type="text" id="operationDate" required readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white cursor-pointer"></div>
+              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Fecha Llegada</label><input type="text" id="arrivalDate" readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white cursor-pointer"></div>
+              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Proveedor</label><input id="supplier" required placeholder="Ej. Morsa" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
+              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Folio</label><input id="folio" required placeholder="Ej. F-1234" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
+              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Responsable</label><input id="responsible" required placeholder="Ej. Juan López" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
+              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Estado</label><input id="status" required placeholder="Ej. Pendiente" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
+              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Ticket</label><input id="ticket" required placeholder="Ej. TK-987" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
+              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Comentario</label><input id="comment" placeholder="Ej. Urgente" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
+            </div>
+            <div class="pt-2 flex justify-end">
+              <button class="px-6 py-2.5 bg-brand-400 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl transition">Guardar Pedido</button>
+            </div>
             <div id="entryError" class="text-red-400 text-xs"></div>
           </form>
         </section>
 
-        <section class="lg:col-span-8 p-6 rounded-2xl bg-slate-900/70 border border-slate-800/80 flex flex-col">
+        <section class="p-6 rounded-2xl bg-slate-900/70 border border-slate-800/80 flex flex-col">
           <h3 class="text-base font-bold text-white mb-4">Historial de Pedidos Especiales</h3>
           <div class="w-full overflow-x-auto rounded-xl border border-slate-800">
-            <table class="w-full text-left text-xs border-collapse min-w-[750px]">
+            <table class="w-full text-left text-xs border-collapse min-w-[1100px]">
               <thead>
-                <tr class="bg-slate-950/80 border-b border-slate-800 text-slate-400 uppercase text-[11px]">
-                  <th class="p-3.5">Clave</th>
-                  <th class="p-3.5">Descripción</th>
-                  <th class="p-3.5">Proveedor</th>
-                  <th class="p-3.5 text-center">Atendido</th>
-                  <th class="p-3.5">F. Pedido</th>
-                  <th class="p-3.5">Llegada</th>
-                  <th class="p-3.5">Responsable</th>
-                  <th class="p-3.5 text-right">Acción</th>
+                <tr class="bg-slate-950/80 border-b border-slate-800 text-slate-400 uppercase text-[10px]">
+                  <th class="p-3">Clave</th>
+                  <th class="p-3">Descripción</th>
+                  <th class="p-3">Sucursal</th>
+                  <th class="p-3">Atención</th>
+                  <th class="p-3">Fecha Pedido</th>
+                  <th class="p-3">Fecha Llegada</th>
+                  <th class="p-3">Proveedor</th>
+                  <th class="p-3">Folio</th>
+                  <th class="p-3">Responsable</th>
+                  <th class="p-3">Estado</th>
+                  <th class="p-3">Ticket</th>
+                  <th class="p-3">Comentario</th>
+                  <th class="p-3 text-right">Acción</th>
                 </tr>
               </thead>
               <tbody id="pedidosBody" class="divide-y divide-slate-800/60 bg-slate-900/30"></tbody>
@@ -105,6 +118,7 @@
             </div>
           </div>
         </section>
+
       </div>
     </main>
   </div>
