@@ -3,59 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#020617">
-  <title>Cotizaciones | Acceso local</title>
+  <title>Dashboard | Autopartes Toro</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Flatpickr -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+  <!-- Chart.js & html2canvas -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-
   <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#effef7',
-              400: '#4ce0a0',
-              500: '#22c55e',
-              600: '#16a34a',
-              950: '#032e1d',
-            }
-          }
-        }
-      }
-    }
+    tailwind.config = { theme: { extend: { colors: { brand: { 400: '#4ce0a0', 500: '#22c55e', 950: '#032e1d' } } } } }
   </script>
-  <style>
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes pulseSlow {
-      0%, 100% { opacity: 0.15; transform: scale(1); }
-      50% { opacity: 0.25; transform: scale(1.05); }
-    }
-    .animate-fade-in { animation: fadeIn 0.35s ease-out forwards; }
-    .animate-pulse-slow { animation: pulseSlow 8s ease-in-out infinite; }
-  </style>
 </head>
 <body class="min-h-full flex flex-col font-sans bg-slate-950 text-slate-100 antialiased selection:bg-brand-400 selection:text-slate-950">
 
   <!-- VISTA DE AUTENTICACIÓN -->
-  <section id="authView" class="min-h-screen w-full grid grid-cols-1 lg:grid-cols-12 bg-slate-950 font-sans selection:bg-brand-400 selection:text-slate-950">
-    <aside class="hidden lg:flex lg:col-span-6 xl:col-span-7 flex-col justify-between p-12 xl:p-16 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-r border-slate-800/50 relative overflow-hidden">
-      <div class="absolute -top-40 -left-40 w-[500px] h-[500px] bg-brand-400/15 rounded-full blur-[128px] pointer-events-none animate-pulse-slow"></div>
-      <div class="absolute bottom-10 right-10 w-96 h-96 bg-brand-400/5 rounded-full blur-[96px] pointer-events-none"></div>
-      <div class="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none"></div>
-
-      <a class="flex items-center gap-3.5 text-2xl font-black tracking-tight text-white z-10 group w-fit" href="#">
-        <span class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-500 to-brand-400 text-slate-950 grid place-items-center font-black text-xl shadow-lg shadow-brand-400/25 group-hover:scale-105 transition-transform duration-300">C</span>
-        <span class="bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">otizaciones</span>
-      </a>
+  <section id="authView" class="min-h-screen w-full grid grid-cols-1 lg:grid-cols-12 bg-slate-950 font-sans">
+    <aside class="hidden lg:flex lg:col-span-7 flex-col justify-between p-16 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-r border-slate-800/50 relative overflow-hidden">
+      <div class="absolute -top-40 -left-40 w-[500px] h-[500px] bg-brand-400/15 rounded-full blur-[128px] pointer-events-none"></div>
+      
+      <div class="flex items-center gap-3.5 text-2xl font-black text-white z-10">
+        <span class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-500 to-brand-400 text-slate-950 grid place-items-center font-black text-xl shadow-lg shadow-brand-400/25">C</span>
+        <span>Dept Cotizaciones</span>
+      </div>
 
       <div class="max-w-2xl my-auto py-12 z-10 space-y-6">
         <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-400/10 border border-brand-400/20 backdrop-blur-md">
@@ -69,379 +43,200 @@
         </h1>
 
         <p class="text-slate-400 text-lg leading-relaxed max-w-xl font-normal">
-          Control diario, pequeño sistema para sustituir el proceso manual de las cotizaciones en excel.
+          Control diario, sistema optimizado con análisis estadístico avanzado.
         </p>
       </div>
 
-      <div class="flex items-center gap-2 text-xs font-medium text-slate-500 z-10">
-        <span class="inline-block w-2 h-2 rounded-full bg-slate-700"></span>
-        <span>Blurryface</span><span>·</span><span>Aplicación local</span>
-      </div>
+      <div class="text-xs text-slate-500 z-10">Blurryface · Aplicación local</div>
     </aside>
 
-    <main class="lg:col-span-6 xl:col-span-5 flex items-center justify-center p-6 sm:p-12 lg:p-16 bg-slate-950/80 backdrop-blur-xl w-full relative">
-      <div class="w-full max-w-md space-y-8 relative z-10">
-        <div id="loginForm" class="space-y-6 animate-fade-in">
+    <main class="lg:col-span-5 flex items-center justify-center p-8 bg-slate-950">
+      <div class="w-full max-w-md space-y-6">
+        <div id="loginForm" class="space-y-6">
           <div class="space-y-2">
-            <span class="text-xs font-bold tracking-widest uppercase text-brand-400/90 block">Bienvenido de nuevo</span>
-            <h2 class="text-3xl font-extrabold tracking-tight text-white">Inicia sesión</h2>
+            <span class="text-xs font-bold tracking-widest uppercase text-brand-400">Bienvenido de nuevo</span>
+            <h2 class="text-3xl font-extrabold text-white">Inicia sesión</h2>
           </div>
           <form id="doLogin" class="space-y-4">
             <div>
-              <label for="loginUser" class="block text-xs font-semibold text-slate-300 mb-2">Usuario</label>
-              <input id="loginUser" autocomplete="username" required placeholder="Tu usuario" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-400">
+              <label class="block text-xs font-semibold text-slate-300 mb-2">Usuario</label>
+              <input id="loginUser" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white focus:border-brand-400 focus:outline-none">
             </div>
             <div>
-              <label for="loginPin" class="block text-xs font-semibold text-slate-300 mb-2">Contraseña / PIN</label>
-              <input id="loginPin" type="password" autocomplete="current-password" required placeholder="Tu contraseña" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-400">
+              <label class="block text-xs font-semibold text-slate-300 mb-2">Contraseña / PIN</label>
+              <input id="loginPin" type="password" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white focus:border-brand-400 focus:outline-none">
             </div>
-            <button class="w-full mt-2 py-3.5 px-4 bg-brand-400 text-slate-950 font-bold rounded-xl transition hover:bg-emerald-400 shadow-lg shadow-brand-400/20" type="submit">Entrar →</button>
-            <div class="text-red-400 text-xs min-h-[1.25rem]" id="loginError"></div>
+            <button class="w-full py-3.5 bg-brand-400 text-slate-950 font-bold rounded-xl hover:bg-emerald-400 transition shadow-lg shadow-brand-400/20">Entrar</button>
+            <div id="loginError" class="text-red-400 text-xs min-h-[1.25rem]"></div>
           </form>
-          <div class="text-center text-sm text-slate-400">
-            ¿Es tu primera vez? <button class="text-brand-400 font-bold hover:underline bg-transparent border-0 p-0 cursor-pointer" id="showRegister">Crear acceso local</button>
-          </div>
+          <div class="text-center text-sm text-slate-400">¿Es tu primera vez? <button id="showRegister" class="text-brand-400 font-bold hover:underline bg-transparent border-0 p-0 cursor-pointer">Crear acceso local</button></div>
         </div>
 
-        <div id="registerForm" class="hidden space-y-6 animate-fade-in">
+        <div id="registerForm" class="hidden space-y-6">
           <div class="space-y-2">
-            <span class="text-xs font-bold tracking-widest uppercase text-brand-400/90 block">Configuración inicial</span>
-            <h2 class="text-3xl font-extrabold tracking-tight text-white">Crea tu acceso</h2>
+            <span class="text-xs font-bold tracking-widest uppercase text-brand-400">Configuración inicial</span>
+            <h2 class="text-3xl font-extrabold text-white">Crea tu acceso</h2>
           </div>
           <form id="doRegister" class="space-y-4">
-            <div>
-              <label for="newUser" class="block text-xs font-semibold text-slate-300 mb-2">Usuario</label>
-              <input id="newUser" required minlength="3" autocomplete="username" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-400">
-            </div>
-            <div>
-              <label for="newPin" class="block text-xs font-semibold text-slate-300 mb-2">Contraseña / PIN</label>
-              <input id="newPin" type="password" required minlength="4" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-400">
-            </div>
-            <div>
-              <label for="confirmPin" class="block text-xs font-semibold text-slate-300 mb-2">Confirmar contraseña</label>
-              <input id="confirmPin" type="password" required minlength="4" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-400">
-            </div>
-            <button class="w-full mt-2 py-3.5 px-4 bg-brand-400 text-slate-950 font-bold rounded-xl transition hover:bg-emerald-400 shadow-lg shadow-brand-400/20" type="submit">Crear acceso</button>
-            <div class="text-red-400 text-xs min-h-[1.25rem]" id="registerError"></div>
+            <div><label class="block text-xs font-semibold text-slate-300 mb-2">Usuario</label><input id="newUser" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white"></div>
+            <div><label class="block text-xs font-semibold text-slate-300 mb-2">PIN</label><input id="newPin" type="password" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white"></div>
+            <div><label class="block text-xs font-semibold text-slate-300 mb-2">Confirmar PIN</label><input id="confirmPin" type="password" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white"></div>
+            <button class="w-full py-3.5 bg-brand-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-brand-400/20">Crear cuenta</button>
+            <div id="registerError" class="text-red-400 text-xs min-h-[1.25rem]"></div>
           </form>
-          <div class="text-center text-sm text-slate-400">
-            <button class="text-brand-400 font-bold hover:underline bg-transparent border-0 p-0 cursor-pointer" id="showLogin">Volver a iniciar sesión</button>
-          </div>
+          <div class="text-center text-sm"><button id="showLogin" class="text-brand-400 font-bold bg-transparent border-0 p-0 cursor-pointer">Volver a iniciar sesión</button></div>
         </div>
       </div>
     </main>
   </section>
 
-  <!-- VISTA PRINCIPAL CON SIDEBAR COLAPSABLE -->
-  <section class="hidden min-h-screen w-full flex flex-col lg:flex-row bg-slate-950 relative" id="appView">
-    
-    <!-- Botón hamburguesa en móvil -->
-    <button id="mobileToggle" class="lg:hidden absolute top-4 left-4 z-50 p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-brand-400 shadow-lg">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-    </button>
+  <!-- VISTA PRINCIPAL (DASHBOARD) -->
+  <section id="appView" class="hidden min-h-screen w-full flex flex-col lg:flex-row bg-slate-950 relative">
+    <button id="mobileToggle" class="lg:hidden absolute top-4 left-4 z-50 p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-brand-400"><i class="fa-solid fa-bars"></i></button>
 
-    <!-- Sidebar Lateral -->
-    <aside id="sidebar" class="w-64 bg-slate-900/90 border-r border-slate-800/80 p-4 flex flex-col justify-between shrink-0 transition-all duration-300 fixed lg:static inset-y-0 left-0 z-40 -translate-x-full lg:translate-x-0">
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="w-20 bg-slate-900/90 border-r border-slate-800/80 p-4 flex flex-col justify-between shrink-0 transition-all duration-300 fixed lg:static inset-y-0 left-0 z-40 -translate-x-full lg:translate-x-0">
       <div class="space-y-6">
-        <div class="flex items-center justify-between px-2 py-1">
-          <div class="flex items-center gap-2.5 text-xl font-black tracking-tight text-white sidebar-text">
-            <span class="w-8 h-8 rounded-lg bg-brand-400 text-slate-950 grid place-items-center font-black text-base">C</span>
-            <span>Otizaciones</span>
+        <div class="flex items-center justify-between px-1 py-1">
+          <div class="flex items-center gap-3 text-xl font-black text-white overflow-hidden">
+            <span class="w-8 h-8 rounded-lg bg-brand-400 text-slate-950 grid place-items-center font-black shrink-0">C</span>
+            <span class="sidebar-text hidden whitespace-nowrap">Toro</span>
           </div>
-          <button id="collapseBtn" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
-          </button>
+          <button id="collapseBtn" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"><i class="fa-solid fa-bars-staggered"></i></button>
         </div>
         
-        <nav class="space-y-1.5">
-          <button id="navDashboard" title="Operaciones & Historial" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-brand-400 bg-brand-400/10 border border-brand-400/30 transition text-left">
-            📊 <span class="sidebar-text">Operaciones & Historial</span>
-          </button>
-          <button id="navMl" title="Links de Mercado Libre" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/50 transition text-left">
-            🔗 <span class="sidebar-text">Links de Mercado Libre</span>
-          </button>
+        <nav class="space-y-2">
+          <a href="index.html" class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-xs font-semibold text-brand-400 bg-brand-400/10 border border-brand-400/30 transition">
+            <i class="fa-solid fa-chart-line text-lg shrink-0"></i><span class="sidebar-text hidden whitespace-nowrap">Dashboard & Reporte</span>
+          </a>
+          <a href="cotizaciones.html" class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/50 transition">
+            <i class="fa-solid fa-file-invoice-dollar text-lg shrink-0"></i><span class="sidebar-text hidden whitespace-nowrap">Cotizaciones</span>
+          </a>
+          <a href="pedidos.html" class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/50 transition">
+            <i class="fa-solid fa-boxes-packing text-lg shrink-0"></i><span class="sidebar-text hidden whitespace-nowrap">Pedidos Especiales</span>
+          </a>
+          <a href="mercadolibre.html" class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/50 transition">
+            <i class="fa-solid fa-store text-lg shrink-0"></i><span class="sidebar-text hidden whitespace-nowrap">Mercado Libre</span>
+          </a>
         </nav>
       </div>
 
       <div class="pt-4 border-t border-slate-800/80 flex items-center justify-between">
-        <div class="flex items-center gap-2 text-xs text-slate-300 overflow-hidden sidebar-text">
-          <span class="w-7 h-7 rounded-full bg-emerald-950 text-brand-400 border border-brand-400/30 flex items-center justify-center font-bold text-xs shrink-0" id="userInitial">U</span>
-          <span id="welcomeUser" class="font-medium truncate max-w-[90px]">Usuario</span>
+        <div class="flex items-center gap-2 text-xs text-slate-300 overflow-hidden">
+          <span class="w-7 h-7 rounded-full bg-emerald-950 text-brand-400 border border-brand-400/30 flex items-center justify-center font-bold shrink-0" id="userInitial">U</span>
+          <span id="welcomeUser" class="sidebar-text hidden font-medium truncate">Usuario</span>
         </div>
-        <button class="px-2.5 py-1 rounded-lg border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white text-xs font-semibold transition shrink-0" id="logout">Salir</button>
+        <button id="logout" class="p-2 text-slate-400 hover:text-white text-xs" title="Cerrar sesión"><i class="fa-solid fa-power-off"></i></button>
       </div>
     </aside>
 
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-950/70 z-30 hidden lg:hidden"></div>
 
-    <main class="flex-1 flex flex-col overflow-y-auto lg:pl-0 pt-16 lg:pt-0">
-      
-      <!-- VISTA 1: DASHBOARD -->
-      <div id="viewDashboard" class="w-full p-4 sm:p-6 lg:p-8 space-y-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-800/50">
-          <div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Registro de Operaciones</h1>
-            <p class="text-slate-400 text-xs sm:text-sm mt-1">Control diario para el departamento de cotizaciones.</p>
-          </div>
-          <div class="flex items-center gap-2.5 flex-wrap">
-            <button class="px-3.5 py-2 rounded-xl border border-slate-700 hover:border-slate-500 text-slate-200 text-xs font-semibold transition bg-slate-900/40" id="exportBtn">↓ Exportar</button>
-            <button class="px-3.5 py-2 rounded-xl border border-brand-400/40 bg-brand-400/10 text-brand-400 hover:bg-brand-400/20 text-xs font-bold transition" id="exportExcelBtn">Exportar Excel</button>
-            <button class="px-3.5 py-2 rounded-xl border border-rose-500/40 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 text-xs font-semibold transition" id="purgeBtn">🧹 Purgar Histórico</button>
-            <label class="px-3.5 py-2 rounded-xl border border-slate-700 hover:border-slate-500 text-slate-200 text-xs font-semibold transition bg-slate-900/40 cursor-pointer" for="importFile">↑ Importar</label>
-            <!-- Atributo multiple agregado para permitir seleccionar varios archivos a la vez -->
-            <input id="importFile" type="file" accept="application/json" multiple class="hidden">
-          </div>
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="flex-1 flex flex-col overflow-y-auto p-4 sm:p-8 space-y-6 pt-16 lg:pt-8">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-800/50">
+        <div>
+          <h1 class="text-3xl font-extrabold text-white tracking-tight">Dashboard & Analítica Estadística</h1>
+          <p class="text-slate-400 text-sm mt-1">Control de cotizaciones con media, desviación estándar, varianza y desglose diario estilo Excel.</p>
         </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800/80">
-            <small class="text-slate-400 text-xs font-medium block">Cotizaciones de Hoy</small>
-            <strong id="totalCotizStat" class="text-3xl font-black text-white mt-2 block">0</strong>
-          </div>
-          <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800/80">
-            <small class="text-slate-400 text-xs font-medium block">Tiempo promedio Cotización</small>
-            <strong id="averageStat" class="text-3xl font-black text-brand-400 mt-2 block">0 min</strong>
-          </div>
-          <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800/80">
-            <small class="text-slate-400 text-xs font-medium block">Pedidos Especiales</small>
-            <strong id="ordersStat" class="text-3xl font-black text-white mt-2 block">0</strong>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
-          <section class="lg:col-span-4 p-5 sm:p-6 rounded-2xl bg-slate-900/70 border border-slate-800/80 shadow-sm">
-            <h3 class="text-base font-bold text-white mb-4 flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-brand-400"></span> Nueva operación
-            </h3>
-            <form id="entryForm" class="space-y-4">
-              <div>
-                <label for="operationDate" class="block text-xs font-semibold text-slate-300 mb-1.5">Fecha de la operación</label>
-                <input type="text" id="operationDate" required readonly placeholder="Selecciona la fecha" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white cursor-pointer focus:outline-none">
-              </div>
-
-              <div>
-                <label for="type" class="block text-xs font-semibold text-slate-300 mb-1.5">Tipo de operación</label>
-                <select id="type" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-400">
-                  <option value="Cotización">Cotización</option>
-                  <option value="Pedido especial">Pedido especial</option>
-                </select>
-              </div>
-
-              <div>
-                <label for="key" class="block text-xs font-semibold text-slate-300 mb-1.5">Clave</label>
-                <input id="key" required placeholder="" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-brand-400">
-              </div>
-
-              <div id="cotizacionFields" class="space-y-4">
-                <div>
-                  <label for="minutes" class="block text-xs font-semibold text-slate-300 mb-1.5">Tiempo empleado (minutos)</label>
-                  <input id="minutes" type="number" min="" step="0.1" placeholder="" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-brand-400">
-                </div>
-              </div>
-
-              <div id="pedidoFields" class="space-y-4 hidden">
-                <div>
-                  <label for="description" class="block text-xs font-semibold text-slate-300 mb-1.5">Descripción</label>
-                  <input id="description" placeholder="" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-brand-400">
-                </div>
-                <div>
-                  <label for="supplier" class="block text-xs font-semibold text-slate-300 mb-1.5">Proveedor</label>
-                  <input id="supplier" placeholder="" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-brand-400">
-                </div>
-                <div>
-                  <label for="arrivalDate" class="block text-xs font-semibold text-slate-300 mb-1.5">¿Cuándo llega?</label>
-                  <input type="text" id="arrivalDate" readonly placeholder="Selecciona fecha" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white cursor-pointer focus:outline-none">
-                </div>
-                <div>
-                  <label for="responsible" class="block text-xs font-semibold text-slate-300 mb-1.5">Responsable del pedido</label>
-                  <input id="responsible" placeholder="" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-brand-400">
-                </div>
-              </div>
-
-              <button class="w-full py-3 px-4 bg-brand-400 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl transition shadow-md mt-2" type="submit">Guardar operación</button>
-              <div class="text-red-400 text-xs min-h-[1rem]" id="entryError"></div>
-            </form>
-          </section>
-
-          <section class="lg:col-span-8 space-y-6">
-            
-            <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80 flex flex-wrap items-center justify-between gap-3">
-              <div class="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 cursor-pointer">
-                <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 002-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                <input type="text" id="rangePicker" readonly placeholder="Filtrar por rango de fecha" class="bg-transparent text-xs text-slate-200 focus:outline-none cursor-pointer min-w-[200px]">
-              </div>
-              <div class="flex items-center gap-2">
-                <button id="weeklySummaryBtn" class="px-3.5 py-2 rounded-xl border border-brand-400/40 bg-brand-400/10 text-brand-400 hover:bg-brand-400/20 text-xs font-bold transition">Reporte</button>
-                <button id="clearFilters" class="text-xs text-slate-400 hover:text-white px-2 py-1 font-semibold">Ver solo Hoy</button>
-              </div>
-            </div>
-
-            <div id="weeklySection" class="hidden p-5 sm:p-6 rounded-2xl bg-slate-900/90 border border-brand-400/30 shadow-lg space-y-5">
-              <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
-                <div>
-                  <span class="text-xs font-bold tracking-widest uppercase text-brand-400"></span>
-                  <div class="flex items-center gap-2 mt-1">
-                    <input type="text" id="reportRangeSelector" readonly placeholder="Seleccionar rango de fechas" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white cursor-pointer focus:outline-none min-w-[190px]">
-                    <span id="weeklyRangeTitle" class="text-xs text-slate-300 font-medium"></span>
-                  </div>
-                </div>
-                <div class="flex items-center gap-2" data-html2canvas-ignore="true">
-                  <button id="downloadReportImg" class="px-3.5 py-2 rounded-xl bg-brand-400 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition shadow-md">Descargar</button>
-                  <button id="closeWeekly" class="text-slate-400 hover:text-white text-xs font-semibold px-3 py-2 rounded-xl border border-slate-800 bg-slate-950 transition">Cerrar</button>
-                </div>
-              </div>
-
-              <div id="weeklyReportCapture" class="space-y-5 p-2 bg-slate-900 rounded-xl">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
-                    <span class="text-slate-400 text-[11px] block">Total Cotizaciones</span>
-                    <strong id="weekTotalCount" class="text-xl font-black text-white mt-1 block">0</strong>
-                  </div>
-                  <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
-                    <span class="text-slate-400 text-[11px] block">Tiempo Promedio</span>
-                    <strong id="weekAvgTime" class="text-xl font-black text-brand-400 mt-1 block">0 min</strong>
-                  </div>
-                  <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
-                    <span class="text-slate-400 text-[11px] block">Mediana</span>
-                    <strong id="weekMedianTime" class="text-xl font-black text-white mt-1 block">0 min</strong>
-                  </div>
-                </div>
-
-                <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 relative h-72">
-                  <canvas id="weeklyChart"></canvas>
-                </div>
-
-                <div class="w-full overflow-x-auto rounded-xl border border-slate-800">
-                  <table class="w-full text-left text-xs border-collapse min-w-[600px]">
-                    <thead>
-                      <tr class="bg-slate-950/90 border-b border-slate-800 text-slate-400 uppercase font-semibold text-[11px] tracking-wider">
-                        <th class="p-3">Día</th>
-                        <th class="p-3">Fecha</th>
-                        <th class="p-3">Claves y Tiempos</th>
-                        <th class="p-3 text-right">Promedio Día</th>
-                      </tr>
-                    </thead>
-                    <tbody id="weeklyCotizBody" class="divide-y divide-slate-800/60 bg-slate-900/30"></tbody>
-                  </table>
-                  <div id="emptyWeekly" class="text-center text-slate-500 py-6 text-xs font-medium">No hay cotizaciones registradas en este rango.</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- TABLA 1: COTIZACIONES (Paginación de 10) -->
-            <div class="p-5 sm:p-6 rounded-2xl bg-slate-900/70 border border-slate-800/80 shadow-sm flex flex-col">
-              <h3 class="text-base font-bold text-white mb-4">Historial de Cotizaciones</h3>
-              <div class="w-full overflow-x-auto rounded-xl border border-slate-800">
-                <table class="w-full text-left text-xs border-collapse min-w-[500px]">
-                  <thead>
-                    <tr class="bg-slate-950/80 border-b border-slate-800 text-slate-400 uppercase font-semibold text-[11px] tracking-wider">
-                      <th class="p-3.5">Fecha</th>
-                      <th class="p-3.5">Clave</th>
-                      <th class="p-3.5">Tiempo</th>
-                      <th class="p-3.5 text-right">Acción</th>
-                    </tr>
-                  </thead>
-                  <tbody id="cotizBody" class="divide-y divide-slate-800/60 bg-slate-900/30"></tbody>
-                </table>
-                <div id="emptyCotiz" class="text-center text-slate-500 py-8 text-sm font-medium">No hay cotizaciones para el período.</div>
-              </div>
-              <div class="flex items-center justify-between pt-3 px-1 text-xs text-slate-400">
-                <span id="cotizPageInfo">Página 1 de 1</span>
-                <div class="flex items-center gap-1.5">
-                  <button id="prevCotiz" class="px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-950 hover:text-white transition disabled:opacity-30 disabled:cursor-not-allowed">Anterior</button>
-                  <button id="nextCotiz" class="px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-950 hover:text-white transition disabled:opacity-30 disabled:cursor-not-allowed">Siguiente</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- TABLA 2: PEDIDOS ESPECIALES (Paginación de 10 - F. Pedido antes de Llegada) -->
-            <div class="p-5 sm:p-6 rounded-2xl bg-slate-900/70 border border-slate-800/80 shadow-sm flex flex-col">
-              <h3 class="text-base font-bold text-white mb-4">Historial de Pedidos Especiales</h3>
-              <div class="w-full overflow-x-auto rounded-xl border border-slate-800">
-                <table class="w-full text-left text-xs border-collapse min-w-[750px]">
-                  <thead>
-                    <tr class="bg-slate-950/80 border-b border-slate-800 text-slate-400 uppercase font-semibold text-[11px] tracking-wider">
-                      <th class="p-3.5">Clave</th>
-                      <th class="p-3.5">Descripción</th>
-                      <th class="p-3.5">Proveedor</th>
-                      <th class="p-3.5 text-center">Atendido</th>
-                      <th class="p-3.5">F. Pedido</th>
-                      <th class="p-3.5">Llegada</th>
-                      <th class="p-3.5">Responsable</th>
-                      <th class="p-3.5 text-right">Acción</th>
-                    </tr>
-                  </thead>
-                  <tbody id="pedidosBody" class="divide-y divide-slate-800/60 bg-slate-900/30"></tbody>
-                </table>
-                <div id="emptyPedidos" class="text-center text-slate-500 py-8 text-sm font-medium">No hay pedidos especiales para el período.</div>
-              </div>
-              <div class="flex items-center justify-between pt-3 px-1 text-xs text-slate-400">
-                <span id="pedidosPageInfo">Página 1 de 1</span>
-                <div class="flex items-center gap-1.5">
-                  <button id="prevPedidos" class="px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-950 hover:text-white transition disabled:opacity-30 disabled:cursor-not-allowed">Anterior</button>
-                  <button id="nextPedidos" class="px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-950 hover:text-white transition disabled:opacity-30 disabled:cursor-not-allowed">Siguiente</button>
-                </div>
-              </div>
-            </div>
-
-          </section>
+        <div class="flex items-center gap-2.5 flex-wrap">
+          <button id="exportBtn" class="px-3.5 py-2 rounded-xl border border-slate-700 hover:border-slate-500 text-slate-200 text-xs font-semibold bg-slate-900/40"><i class="fa-solid fa-download mr-1.5"></i> Exportar JSON</button>
+          <button id="purgeBtn" class="px-3.5 py-2 rounded-xl border border-rose-500/40 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 text-xs font-semibold"><i class="fa-solid fa-broom mr-1.5"></i> Purgar</button>
+          <label class="px-3.5 py-2 rounded-xl border border-slate-700 text-slate-200 text-xs font-semibold bg-slate-900/40 cursor-pointer"><i class="fa-solid fa-upload mr-1.5"></i> Importar <input id="importFile" type="file" accept="application/json" multiple class="hidden"></label>
         </div>
       </div>
 
-      <!-- VISTA 2: MERCADO LIBRE (Paginación de 10) -->
-      <div id="viewMl" class="w-full p-4 sm:p-6 lg:p-8 space-y-6 hidden">
-        <div class="flex items-center justify-between pb-2 border-b border-slate-800/50">
-          <div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Links de Mercado Libre</h1>
-            <p class="text-slate-400 text-xs sm:text-sm mt-1">Administra tus publicaciones y enlaces de forma independiente.</p>
-          </div>
+      <!-- TARJETAS DE RESUMEN ESTADÍSTICO (EXCEL STYLE) -->
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
+        <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80">
+          <small class="text-slate-400 text-xs font-medium block">Conteo (N)</small>
+          <strong id="statN" class="text-2xl font-black text-white mt-1 block">0</strong>
         </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
-          <div class="lg:col-span-4 p-5 sm:p-6 rounded-2xl bg-slate-900/70 border border-slate-800/80 shadow-sm">
-            <h3 class="text-base font-bold text-white mb-4 flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-sky-400"></span> Nuevo enlace ML
-            </h3>
-            <form id="mlForm" class="space-y-4">
-              <div>
-                <label class="block text-xs font-semibold text-slate-300 mb-1.5">Enlace de Mercado Libre (URL)</label>
-                <input id="mlUrlInput" type="url" required placeholder="https://articulo.mercadolibre.com.mx/..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-sky-400">
-              </div>
-              <button class="w-full py-3 px-4 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs rounded-xl transition shadow-md mt-2" type="submit">Guardar enlace</button>
-            </form>
-          </div>
-
-          <div class="lg:col-span-8 p-5 sm:p-6 rounded-2xl bg-slate-900/70 border border-slate-800/80 shadow-sm flex flex-col">
-            <h3 class="text-base font-bold text-white mb-4">Historial de Enlaces ML</h3>
-            <div class="w-full overflow-x-auto rounded-xl border border-slate-800">
-              <table class="w-full text-left text-xs border-collapse min-w-[500px]">
-                <thead>
-                  <tr class="bg-slate-950/80 border-b border-slate-800 text-slate-400 uppercase font-semibold text-[11px] tracking-wider">
-                    <th class="p-3.5">Fecha</th>
-                    <th class="p-3.5">Enlace</th>
-                    <th class="p-3.5 text-right">Acción</th>
-                  </tr>
-                </thead>
-                <tbody id="mlTableBody" class="divide-y divide-slate-800/60 bg-slate-900/30"></tbody>
-              </table>
-              <div id="emptyMlView" class="text-center text-slate-500 py-8 text-sm font-medium">No hay links de Mercado Libre registrados.</div>
-            </div>
-            <div class="flex items-center justify-between pt-3 px-1 text-xs text-slate-400">
-              <span id="mlViewPageInfo">Página 1 de 1</span>
-              <div class="flex items-center gap-1.5">
-                <button id="prevMl" class="px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-950 hover:text-white transition disabled:opacity-30 disabled:cursor-not-allowed">Anterior</button>
-                <button id="nextMl" class="px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-950 hover:text-white transition disabled:opacity-30 disabled:cursor-not-allowed">Siguiente</button>
-              </div>
-            </div>
-          </div>
-
+        <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80">
+          <small class="text-slate-400 text-xs font-medium block">Suma Total</small>
+          <strong id="statSum" class="text-2xl font-black text-white mt-1 block">0 min</strong>
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80">
+          <small class="text-slate-400 text-xs font-medium block">Media / Promedio (x̄)</small>
+          <strong id="statMean" class="text-2xl font-black text-brand-400 mt-1 block">0 min</strong>
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80">
+          <small class="text-slate-400 text-xs font-medium block">Varianza (s²)</small>
+          <strong id="statVariance" class="text-2xl font-black text-white mt-1 block">0</strong>
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80">
+          <small class="text-slate-400 text-xs font-medium block">Desviación Estándar (s)</small>
+          <strong id="statStdDev" class="text-2xl font-black text-emerald-400 mt-1 block">0</strong>
         </div>
       </div>
 
+      <!-- SECCIÓN DE REPORTE Y GRÁFICA -->
+      <div class="p-6 rounded-2xl bg-slate-900/90 border border-brand-400/30 shadow-lg space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
+          <div>
+            <span class="text-xs font-bold uppercase text-brand-400">Gráfica de Tendencia y Dispersión</span>
+            <div class="flex items-center gap-2 mt-1">
+              <input type="text" id="reportRangeSelector" readonly placeholder="Filtrar por rango opcional" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white cursor-pointer min-w-[200px]">
+              <span id="weeklyRangeTitle" class="text-xs text-slate-300 font-medium">Mes en curso</span>
+            </div>
+          </div>
+          <button id="downloadReportImg" class="px-3.5 py-2 rounded-xl bg-brand-400 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition"><i class="fa-solid fa-camera mr-1"></i> Descargar Imagen</button>
+        </div>
+
+        <div id="weeklyReportCapture" class="space-y-5 p-2 bg-slate-900 rounded-xl">
+          <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 relative h-72">
+            <canvas id="weeklyChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLA ESTILIZADA POR DÍAS (ESTILO EXCEL) -->
+      <div class="p-6 rounded-2xl bg-slate-900/90 border border-slate-800/80 shadow-lg space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+          <h3 class="text-base font-bold text-white"><i class="fa-solid fa-table-cells text-brand-400 mr-2"></i> Desglose Detallado por Días y Parámetros Estadísticos (xi, x̄, xi-x̄)</h3>
+        </div>
+        <div id="excelTablesContainer" class="space-y-6">
+          <!-- Se llenará dinámicamente desde app.js -->
+        </div>
+      </div>
     </main>
   </section>
+
+  <!-- Script Typewriter -->
+  <script>
+    (function() {
+      const line1Text = "Autopartes, Toro";
+      const line2Text = " Dept. Cotizaciones.";
+      const typingSpeed = 100, erasingSpeed = 60, pauseTime = 2000;
+
+      function iniciarEfectoTypewriter() {
+        const elLine1 = document.getElementById('typedLine1');
+        const elLine2 = document.getElementById('typedLine2');
+        if (!elLine1 || !elLine2) return;
+
+        let i = 0, j = 0, isDeleting = false;
+        function loop() {
+          if (!isDeleting && i <= line1Text.length) {
+            elLine1.textContent = line1Text.substring(0, i); i++; setTimeout(loop, typingSpeed);
+          } else if (!isDeleting && j <= line2Text.length) {
+            elLine2.textContent = line2Text.substring(0, j); j++; setTimeout(loop, typingSpeed);
+          } else if (!isDeleting && i > line1Text.length && j > line2Text.length) {
+            isDeleting = true; setTimeout(loop, pauseTime);
+          } else if (isDeleting && j > 0) {
+            j--; elLine2.textContent = line2Text.substring(0, j); setTimeout(loop, erasingSpeed);
+          } else if (isDeleting && i > 0) {
+            i--; elLine1.textContent = line1Text.substring(0, i); setTimeout(loop, erasingSpeed);
+          } else if (isDeleting && i === 0 && j === 0) {
+            isDeleting = false; setTimeout(loop, 500);
+          }
+        }
+        loop();
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciarEfectoTypewriter);
+      else iniciarEfectoTypewriter();
+    })();
+  </script>
+
   <script src="app.js"></script>
 </body>
 </html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acceso Denegado | Autopartes Toro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = { theme: { extend: { colors: { brand: { 400: '#4ce0a0', 500: '#22c55e', 950: '#032e1d' } } } } }
+  </script>
+</head>
+<body class="min-h-screen flex items-center justify-center font-sans bg-slate-950 text-slate-100 p-6 selection:bg-brand-400 selection:text-slate-950">
+
+  <div class="max-w-md w-full bg-slate-900/90 border border-slate-800 p-8 rounded-3xl shadow-2xl text-center space-y-6 relative overflow-hidden">
+    <div class="absolute -top-24 -right-24 w-48 h-48 bg-rose-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+    <div class="w-16 h-16 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-lg shadow-rose-500/10">
+      <i class="fa-solid fa-lock"></i>
+    </div>
+
+    <div class="space-y-2">
+      <span class="text-[11px] font-bold uppercase tracking-widest text-rose-400 bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20">Error 403 · Restringido</span>
+      <h1 class="text-3xl font-extrabold text-white tracking-tight pt-2">Acceso Denegado</h1>
+      <p class="text-slate-400 text-sm leading-relaxed">No tienes permisos para ver esta sección porque no has iniciado sesión o tu sesión ha expirado.</p>
+    </div>
+    <a href="index.html" class="block w-full py-3.5 bg-brand-400 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl transition shadow-lg shadow-brand-400/20">
+      <i class="fa-solid fa-arrow-left mr-2"></i> Regresar
+    </a>
+  </div>
+
+</body>
+</html>

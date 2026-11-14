@@ -1,479 +1,177 @@
 (() => {
   const $ = id => document.getElementById(id);
-  const KEYS = { user:'partflow_user_v1', records:'partflow_records_v1' };
-  let records = [];
-  let weeklyChartInstance = null;
-  let reportRangePicker = null;
-  
-  // Paginación fija de máximo 10 elementos por página
-  const PAGE_SIZE = 10;
-  let cotizPage = 1;
-  let pedidosPage = 1;
-  let mlPage = 1;
-
-  let isSidebarCollapsed = false;
-
-  const getLocalDateString = (d = new Date()) => {
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
-
-  const todayStr = getLocalDateString(new Date());
-
-  let startDateFilter = todayStr;
-  let endDateFilter = todayStr;
-  let reportStart = todayStr;
-  let reportEnd = todayStr;
-
-  const operationDatePicker = flatpickr("#operationDate", { locale: "es", defaultDate: todayStr, dateFormat: "Y-m-d" });
-  operationDatePicker.setDate(todayStr, true);
-  
-  const arrivalDatePicker = flatpickr("#arrivalDate", { locale: "es", defaultDate: todayStr, dateFormat: "Y-m-d" });
-  arrivalDatePicker.setDate(todayStr, true);
-  
-  const rangePicker = flatpickr("#rangePicker", {
-    mode: "range", locale: "es", dateFormat: "Y-m-d", defaultDate: [todayStr, todayStr], 
-    onClose: function(selectedDates, dateStr, instance) {
-      if (selectedDates.length === 2) {
-        startDateFilter = instance.formatDate(selectedDates[0], "Y-m-d");
-        endDateFilter = instance.formatDate(selectedDates[1], "Y-m-d");
-      } else if (selectedDates.length === 1) {
-        startDateFilter = instance.formatDate(selectedDates[0], "Y-m-d");
-        endDateFilter = startDateFilter;
-      } else {
-        startDateFilter = ''; endDateFilter = '';
-      }
-      cotizPage = 1; pedidosPage = 1;
-      render();
-    }
-  });
-  rangePicker.setDate([todayStr, todayStr], true);
-
-  reportRangePicker = flatpickr("#reportRangeSelector", {
-    mode: "range", locale: "es", dateFormat: "Y-m-d", defaultDate: [todayStr, todayStr],
-    onChange: function(selectedDates, dateStr, instance) {
-      if (selectedDates.length === 2) {
-        reportStart = instance.formatDate(selectedDates[0], "Y-m-d");
-        reportEnd = instance.formatDate(selectedDates[1], "Y-m-d");
-        $('weeklyRangeTitle').textContent = `Del ${reportStart} al ${reportEnd}`;
-        renderReport(reportStart, reportEnd);
-      } else if (selectedDates.length === 1) {
-        reportStart = instance.formatDate(selectedDates[0], "Y-m-d");
-        reportEnd = reportStart;
-        $('weeklyRangeTitle').textContent = `Día ${reportStart}`;
-        renderReport(reportStart, reportEnd);
-      }
-    }
-  });
-
-  // Sidebar Colapsable
-  const sidebar = $('sidebar');
-  const overlay = $('sidebarOverlay');
-
-  $('collapseBtn').onclick = () => {
-    isSidebarCollapsed = !isSidebarCollapsed;
-    if (window.innerWidth >= 1024) {
-      if (isSidebarCollapsed) {
-        sidebar.classList.remove('w-64'); sidebar.classList.add('w-20');
-        document.querySelectorAll('.sidebar-text').forEach(el => el.classList.add('hidden'));
-      } else {
-        sidebar.classList.remove('w-20'); sidebar.classList.add('w-64');
-        document.querySelectorAll('.sidebar-text').forEach(el => el.classList.remove('hidden'));
-      }
-    } else {
-      sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden');
-    }
-  };
-
-  $('mobileToggle').onclick = () => { sidebar.classList.remove('-translate-x-full'); overlay.classList.remove('hidden'); };
-  overlay.onclick = () => { sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden'); };
-
-  $('navDashboard').onclick = () => {
-    $('viewDashboard').classList.remove('hidden'); $('viewMl').classList.add('hidden');
-    $('navDashboard').className = "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-brand-400 bg-brand-400/10 border border-brand-400/30 transition text-left";
-    $('navMl').className = "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/50 transition text-left";
-    if (window.innerWidth < 1024) { sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden'); }
-  };
-
-  $('navMl').onclick = () => {
-    $('viewMl').classList.remove('hidden'); $('viewDashboard').classList.add('hidden');
-    $('navMl').className = "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-sky-400 bg-sky-400/10 border border-sky-400/30 transition text-left";
-    $('navDashboard').className = "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/50 transition text-left";
-    renderMlView();
-    if (window.innerWidth < 1024) { sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden'); }
-  };
-
-  $('type').onchange = (e) => {
-    const val = e.target.value;
-    $('cotizacionFields').classList.toggle('hidden', val !== 'Cotización');
-    $('pedidoFields').classList.toggle('hidden', val !== 'Pedido especial');
-    $('minutes').required = (val === 'Cotización');
-    $('description').required = (val === 'Pedido especial');
-    $('supplier').required = (val === 'Pedido especial');
-    $('responsible').required = (val === 'Pedido especial');
+  const KEYS = { 
+    user: 'partflow_user_v1', 
+    session: 'partflow_session_v1', 
+    records: 'partflow_records_v1' 
   };
 
   const getUser = () => { try { return JSON.parse(localStorage.getItem(KEYS.user)); } catch { return null; } };
-  const getRecords = () => { try { const x = JSON.parse(localStorage.getItem(KEYS.records)||'[]'); return Array.isArray(x) ? x : []; } catch { return []; } };
+  const isSessionActive = localStorage.getItem(KEYS.session) === 'true';
+  const user = getUser();
+
+  // === PROTECCIÓN DE RUTAS (REDIRECCIÓN A ACCESO DENEGADO) ===
+  const path = window.location.pathname;
+  const isLoginPage = Boolean($('authView'));
+  const isDeniedPage = path.endsWith('acceso-denegado.html') || path.includes('acceso-denegado');
+
+  if (!isLoginPage && !isDeniedPage && (!user || !isSessionActive)) {
+    window.location.replace('acceso-denegado.html');
+    return;
+  }
+  // ==========================================================
+
+  let records = [];
+  const PAGE_SIZE = 10;
+  let cotizPage = 1, pedidosPage = 1, mlPage = 1;
+  let weeklyChartInstance = null;
+
+  const getLocalDateString = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const todayStr = getLocalDateString(new Date());
+
+  const getRecords = () => { try { const x = JSON.parse(localStorage.getItem(KEYS.records) || '[]'); return Array.isArray(x) ? x : []; } catch { return []; } };
   const saveRecords = () => localStorage.setItem(KEYS.records, JSON.stringify(records));
-  const show = id => $(id).classList.remove('hidden');
-  const hide = id => $(id).classList.add('hidden');
 
-  $('showRegister').onclick = () => { hide('loginForm'); show('registerForm'); $('registerError').textContent=''; };
-  $('showLogin').onclick = () => { hide('registerForm'); show('loginForm'); $('loginError').textContent=''; };
+  records = getRecords();
 
-  $('doRegister').addEventListener('submit', e => {
-    e.preventDefault();
-    const username = $('newUser').value.trim(), pin = $('newPin').value, confirm = $('confirmPin').value;
-    if (pin !== confirm) { $('registerError').textContent = 'Las contraseñas no coinciden.'; return; }
-    if (getUser()) { $('registerError').textContent = 'Ya existe un acceso local. Inicia sesión.'; return; }
-    localStorage.setItem(KEYS.user, JSON.stringify({username, pin}));
-    $('loginUser').value = username; $('loginPin').value = pin;
-    $('doRegister').requestSubmit();
-  });
+  // Sidebar collapse state (collapsed by default)
+  const sidebar = $('sidebar'), overlay = $('sidebarOverlay');
+  let isCollapsed = true;
 
-  $('doLogin').addEventListener('submit', e => {
-    e.preventDefault();
-    const user = getUser();
-    if (!user) { $('loginError').textContent = 'Primero crea tu acceso local.'; return; }
-    if ($('loginUser').value.trim() !== user.username || $('loginPin').value !== user.pin) { $('loginError').textContent = 'Usuario o contraseña incorrectos.'; return; }
-    openApp(user.username);
-  });
-
-  function openApp(username) {
-    records = getRecords();
-    $('welcomeUser').textContent = username; $('userInitial').textContent = username.charAt(0).toUpperCase();
-    hide('authView'); show('appView');
-    render();
-  }
-  
-  $('logout').onclick = () => { hide('appView'); show('authView'); $('loginPin').value=''; };
-  
-  $('entryForm').addEventListener('submit', e => {
-    e.preventDefault();
-    const type = $('type').value;
-    const key = $('key').value.trim().toUpperCase();
-    const opDate = $('operationDate').value || todayStr;
-    
-    let newRecord = { id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), type, key, date: opDate };
-
-    if (type === 'Cotización') {
-      const minutes = Number($('minutes').value);
-      if (!Number.isFinite(minutes) || minutes <= 0) { $('entryError').textContent = 'Ingresa un tiempo mayor que cero.'; return; }
-      newRecord.minutes = minutes;
-    } else {
-      newRecord.description = $('description').value.trim().toUpperCase();
-      newRecord.supplier = $('supplier').value.trim().toUpperCase();
-      newRecord.arrivalDate = $('arrivalDate').value;
-      newRecord.responsible = $('responsible').value.trim().toUpperCase();
-      newRecord.completed = false;
-    }
-
-    records.unshift(newRecord);
-    saveRecords();
-    
-    $('key').value = ''; $('minutes').value = ''; $('description').value = ''; $('supplier').value = ''; $('responsible').value = '';
-    $('entryError').textContent = '';
-    operationDatePicker.setDate(todayStr, true);
-
-    cotizPage = 1; pedidosPage = 1;
-    render();
-  });
-
-  $('mlForm').addEventListener('submit', e => {
-    e.preventDefault();
-    const newRecord = {
-      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-      type: 'Pedido Mercado Libre',
-      date: todayStr,
-      mlLink: $('mlUrlInput').value.trim()
-    };
-
-    records.unshift(newRecord);
-    saveRecords();
-    $('mlUrlInput').value = '';
-    mlPage = 1;
-    renderMlView();
-    alert('¡Enlace de Mercado Libre guardado con éxito!');
-  });
-
-  // Botones de Paginación
-  $('prevCotiz').onclick = () => { if (cotizPage > 1) { cotizPage--; render(); } };
-  $('nextCotiz').onclick = () => { cotizPage++; render(); };
-
-  $('prevPedidos').onclick = () => { if (pedidosPage > 1) { pedidosPage--; render(); } };
-  $('nextPedidos').onclick = () => { pedidosPage++; render(); };
-
-  $('prevMl').onclick = () => { if (mlPage > 1) { mlPage--; renderMlView(); } };
-  $('nextMl').onclick = () => { mlPage++; renderMlView(); };
-
-  // EXPORTAR CADA UNO EN SU PROPIO JSON
-  $('exportBtn').onclick = () => {
-    const filtered = records.filter(r => {
-      const recordDate = r.date || todayStr;
-      if (startDateFilter && recordDate < startDateFilter) return false;
-      if (endDateFilter && recordDate > endDateFilter) return false;
-      return true;
-    });
-
-    if (filtered.length === 0) { alert('No hay registros en el rango seleccionado.'); return; }
-
-    const cotizaciones = filtered.filter(r => r.type === 'Cotización');
-    const pedidos = filtered.filter(r => r.type === 'Pedido especial');
-    const mlList = filtered.filter(r => r.type === 'Pedido Mercado Libre');
-    let exportedFiles = 0;
-
-    if (cotizaciones.length > 0) {
-      const data = { app: 'PartFlow', type: 'Cotizaciones', version: 31, exportedAt: new Date().toISOString(), records: cotizaciones };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob), a = document.createElement('a');
-      a.href = url; a.download = `cotizaciones-${startDateFilter}-al-${endDateFilter}.json`; a.click(); URL.revokeObjectURL(url);
-      exportedFiles++;
-    }
-
-    if (pedidos.length > 0) {
-      const data = { app: 'PartFlow', type: 'Pedidos Especiales', version: 31, exportedAt: new Date().toISOString(), records: pedidos };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob), a = document.createElement('a');
-      a.href = url; a.download = `pedidos-especiales-${startDateFilter}-al-${endDateFilter}.json`; a.click(); URL.revokeObjectURL(url);
-      exportedFiles++;
-    }
-
-    if (mlList.length > 0) {
-      const data = { app: 'PartFlow', type: 'Mercado Libre', version: 31, exportedAt: new Date().toISOString(), records: mlList };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob), a = document.createElement('a');
-      a.href = url; a.download = `mercado-libre-${startDateFilter}-al-${endDateFilter}.json`; a.click(); URL.revokeObjectURL(url);
-      exportedFiles++;
-    }
-
-    if (exportedFiles > 0) {
-      alert(`Se han exportado ${exportedFiles} archivo(s) JSON independientes con éxito.`);
-    } else {
-      alert('No hay registros en ninguna categoría para el rango seleccionado.');
-    }
-  };
-
-  // EXPORTAR EXCEL (CSV) INDEPENDIENTE (Incluyendo Cotizaciones)
-  $('exportExcelBtn').onclick = () => {
-    const filtered = records.filter(r => {
-      const recordDate = r.date || todayStr;
-      if (startDateFilter && recordDate < startDateFilter) return false;
-      if (endDateFilter && recordDate > endDateFilter) return false;
-      return true;
-    });
-
-    if (filtered.length === 0) { alert('No hay registros en el rango seleccionado.'); return; }
-
-    const cotizaciones = filtered.filter(r => r.type === 'Cotización');
-    const pedidos = filtered.filter(r => r.type === 'Pedido especial');
-    const mlList = filtered.filter(r => r.type === 'Pedido Mercado Libre');
-    let exportCount = 0;
-
-    if (cotizaciones.length > 0) {
-      let csvCotiz = "\uFEFFFECHA,CLAVE,TIEMPO_MINUTOS\r\n";
-      cotizaciones.forEach(r => { csvCotiz += `${r.date || todayStr},"${(r.key || '').replace(/"/g, '""')}",${r.minutes}\r\n`; });
-      const blob = new Blob([csvCotiz], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob), a = document.createElement('a');
-      a.href = url; a.download = `cotizaciones-${startDateFilter}-al-${endDateFilter}.csv`; a.click(); URL.revokeObjectURL(url);
-      exportCount++;
-    }
-
-    if (pedidos.length > 0) {
-      let csvPedidos = "\uFEFFCLAVE,DESCRIPCION,PROVEEDOR,FECHA_PEDIDO,FECHA_LLEGADA,ATENDIDO,RESPONSABLE\r\n";
-      pedidos.forEach(r => {
-        csvPedidos += `"${(r.key || '').replace(/"/g, '""')}","${(r.description || '').replace(/"/g, '""')}","${(r.supplier || '').replace(/"/g, '""')}",${r.date || todayStr},${r.arrivalDate || ''},${r.completed ? 'SÍ' : 'NO'},"${(r.responsible || '').replace(/"/g, '""')}"\r\n`;
-      });
-      const blob = new Blob([csvPedidos], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob), a = document.createElement('a');
-      a.href = url; a.download = `pedidos-especiales-${startDateFilter}-al-${endDateFilter}.csv`; a.click(); URL.revokeObjectURL(url);
-      exportCount++;
-    }
-
-    if (mlList.length > 0) {
-      let csvMl = "\uFEFFFECHA,ENLACE_ML\r\n";
-      mlList.forEach(r => { csvMl += `${r.date || todayStr},"${(r.mlLink || '').replace(/"/g, '""')}"\r\n`; });
-      const blob = new Blob([csvMl], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob), a = document.createElement('a');
-      a.href = url; a.download = `mercado-libre-${startDateFilter}-al-${endDateFilter}.csv`; a.click(); URL.revokeObjectURL(url);
-      exportCount++;
-    }
-
-    if (exportCount > 0) alert(`Se han exportado ${exportCount} archivo(s) Excel (CSV) con éxito.`);
-    else alert('No se encontraron registros para los filtros actuales.');
-  };
-
-  // IMPORTACIÓN MÚLTIPLE AUTOMÁTICA SIN PASOS INTERMEDIOS
-  $('importFile').onchange = async e => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    try {
-      let allImportedRecords = [...records];
-      for (let file of files) {
-        const text = await file.text();
-        const data = JSON.parse(text);
-        const incoming = Array.isArray(data) ? data : (Array.isArray(data.records) ? data.records : []);
-        if (incoming.length > 0) {
-          incoming.forEach(inc => {
-            // Evitar duplicados exactos por ID
-            if (!allImportedRecords.some(r => r.id === inc.id)) {
-              allImportedRecords.push(inc);
-            }
-          });
+  if ($('collapseBtn')) {
+    $('collapseBtn').onclick = () => {
+      isCollapsed = !isCollapsed;
+      if (window.innerWidth >= 1024) {
+        if (isCollapsed) {
+          sidebar.classList.remove('w-64'); sidebar.classList.add('w-20');
+          document.querySelectorAll('.sidebar-text').forEach(el => el.classList.add('hidden'));
+        } else {
+          sidebar.classList.remove('w-20'); sidebar.classList.add('w-64');
+          document.querySelectorAll('.sidebar-text').forEach(el => el.classList.remove('hidden'));
         }
+      } else {
+        sidebar.classList.toggle('-translate-x-full');
+        if (overlay) overlay.classList.toggle('hidden');
       }
-      records = allImportedRecords;
-      saveRecords();
-      cotizPage = 1; pedidosPage = 1; mlPage = 1;
-      render(); renderMlView();
-      alert('¡Importación de archivos completada con éxito!');
-    } catch (err) {
-      alert('Error al leer o procesar los archivos JSON.');
-    }
-    e.target.value = '';
-  };
-
-  $('purgeBtn').onclick = () => {
-    const dias = prompt('¿Cuántos días de antigüedad deseas CONSERVAR? (Ej. 90):', '90');
-    if (!dias || isNaN(dias)) return;
-    const limiteDias = parseInt(dias, 10);
-    const fechaCorteObj = new Date();
-    fechaCorteObj.setDate(fechaCorteObj.getDate() - limiteDias);
-    const fechaCorteStr = getLocalDateString(fechaCorteObj);
-
-    if (confirm(`Se eliminarán permanentemente los registros anteriores al ${fechaCorteStr}. ¿Proceder?`)) {
-      const totalAntes = records.length;
-      records = records.filter(r => (r.date || todayStr) >= fechaCorteStr);
-      saveRecords();
-      cotizPage = 1; pedidosPage = 1; mlPage = 1;
-      render(); renderMlView();
-      alert(`Se han depurado ${totalAntes - records.length} registros antiguos.`);
-    }
-  };
-
-  $('weeklySummaryBtn').onclick = () => {
-    reportStart = todayStr; reportEnd = todayStr;
-    reportRangePicker.setDate([todayStr, todayStr], true);
-    $('weeklyRangeTitle').textContent = `Del ${todayStr} al ${todayStr}`;
-    show('weeklySection'); renderReport(todayStr, todayStr);
-  };
-
-  $('closeWeekly').onclick = () => hide('weeklySection');
-
-  $('downloadReportImg').onclick = async () => {
-    const reportElement = $('weeklySection');
-    const originalBtn = $('downloadReportImg');
-    originalBtn.textContent = 'Generando...'; originalBtn.disabled = true;
-    try {
-      const canvas = await html2canvas(reportElement, { backgroundColor: '#0f172a', scale: 2, useCORS: true, ignoreElements: (el) => el.getAttribute('data-html2canvas-ignore') === 'true' });
-      const link = document.createElement('a');
-      link.href = canvas.toDataURL('image/png'); link.download = `reporte-${reportStart}-al-${reportEnd}.png`;
-      link.click();
-    } catch (err) { alert('Error al generar la imagen.'); } 
-    finally { originalBtn.textContent = '📷 Descargar Imagen'; originalBtn.disabled = false; }
-  };
-
-  function renderReport(startRange, endRange) {
-    const periodCotiz = records.filter(r => r.type === 'Cotización' && (r.date || todayStr) >= startRange && (r.date || todayStr) <= endRange);
-    $('weekTotalCount').textContent = periodCotiz.length;
-
-    if (periodCotiz.length === 0) {
-      $('weekAvgTime').textContent = '0 min'; $('weekMedianTime').textContent = '0 min';
-      $('weeklyCotizBody').innerHTML = ''; show('emptyWeekly');
-      if (weeklyChartInstance) { weeklyChartInstance.destroy(); weeklyChartInstance = null; }
-      return;
-    }
-
-    hide('emptyWeekly');
-    const totalMinutes = periodCotiz.reduce((sum, r) => sum + Number(r.minutes), 0);
-    $('weekAvgTime').textContent = (totalMinutes / periodCotiz.length).toFixed(1) + ' min';
-
-    const sortedTimes = periodCotiz.map(r => Number(r.minutes)).sort((a, b) => a - b);
-    const mid = Math.floor(sortedTimes.length / 2);
-    const median = sortedTimes.length % 2 === 0 ? (sortedTimes[mid - 1] + sortedTimes[mid]) / 2 : sortedTimes[mid];
-    $('weekMedianTime').textContent = median.toFixed(1) + ' min';
-
-    const groupedByDay = {};
-    periodCotiz.forEach(r => {
-      const d = r.date || todayStr;
-      if (!groupedByDay[d]) groupedByDay[d] = { totalMin: 0, items: [] };
-      groupedByDay[d].totalMin += Number(r.minutes);
-      groupedByDay[d].items.push({ key: r.key, minutes: Number(r.minutes) });
-    });
-
-    const sortedDates = Object.keys(groupedByDay).sort();
-    const daysOfWeek = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-    const chartLabels = [], chartDataPoints = [], medianLineData = [];
-    const tbody = $('weeklyCotizBody'); tbody.innerHTML = '';
-
-    sortedDates.forEach(dateStr => {
-      const data = groupedByDay[dateStr];
-      const dayAvg = data.totalMin / data.items.length;
-      const dayName = daysOfWeek[new Date(dateStr + 'T00:00:00').getDay()];
-
-      chartLabels.push(`${dayName} (${dateStr})`);
-      chartDataPoints.push(Number(dayAvg.toFixed(1)));
-      medianLineData.push(Number(median.toFixed(1)));
-
-      const itemsHtml = data.items.map(item => `
-        <span class="inline-flex items-center gap-1 bg-slate-950 border border-slate-800 px-2 py-1 rounded-md text-[11px] text-slate-300 mr-1 mb-1">
-          <strong class="text-white">${item.key}:</strong> <span class="text-brand-400 font-semibold">${item.minutes.toFixed(1)}m</span>
-        </span>
-      `).join('');
-
-      const tr = document.createElement('tr');
-      tr.className = 'hover:bg-slate-800/40 transition-colors';
-      tr.innerHTML = `<td class="p-3 text-brand-400 font-semibold">${dayName}</td><td class="p-3 text-slate-300">${dateStr}</td><td class="p-3"><div class="flex flex-wrap items-center">${itemsHtml}</div></td><td class="p-3 text-right text-slate-200 font-semibold">${dayAvg.toFixed(1)} min</td>`;
-      tbody.appendChild(tr);
-    });
-
-    const ctx = $('weeklyChart').getContext('2d');
-    if (weeklyChartInstance) weeklyChartInstance.destroy();
-    weeklyChartInstance = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: chartLabels,
-        datasets: [
-          { label: 'Promedio Diario (min)', data: chartDataPoints, borderColor: '#4ce0a0', backgroundColor: '#4ce0a0', borderWidth: 2, tension: 0.1 },
-          { label: `Mediana (${median.toFixed(1)} min)`, data: medianLineData, borderColor: '#38bdf8', borderWidth: 2, borderDash: [5, 5], pointRadius: 0, fill: false }
-        ]
-      },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#cbd5e1' } } }, scales: { x: { ticks: { color: '#94a3b8' } }, y: { beginAtZero: true, ticks: { color: '#94a3b8' } } } }
-    });
+    };
   }
 
-  function render(){
-    const filtered = records.filter(r => {
-      const recordDate = r.date || todayStr;
-      if (startDateFilter && recordDate < startDateFilter) return false;
-      if (endDateFilter && recordDate > endDateFilter) return false;
-      return true;
+  if ($('mobileToggle')) {
+    $('mobileToggle').onclick = () => { sidebar.classList.remove('-translate-x-full'); if (overlay) overlay.classList.remove('hidden'); };
+  }
+  if (overlay) {
+    overlay.onclick = () => { sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden'); };
+  }
+
+  // Auth logic & persistent session control
+  if ($('authView')) {
+    if (!user || !isSessionActive) {
+      $('authView').classList.remove('hidden');
+      if ($('appView')) $('appView').classList.add('hidden');
+      if (user && $('loginUser')) {
+        $('loginUser').value = user.username;
+      }
+    } else {
+      $('authView').classList.add('hidden');
+      if ($('appView')) $('appView').classList.remove('hidden');
+      if ($('welcomeUser')) $('welcomeUser').textContent = user.username;
+      if ($('userInitial')) $('userInitial').textContent = user.username.charAt(0).toUpperCase();
+      initDashboard();
+    }
+
+    if ($('showRegister')) $('showRegister').onclick = () => { $('loginForm').classList.add('hidden'); $('registerForm').classList.remove('hidden'); };
+    if ($('showLogin')) $('showLogin').onclick = () => { $('registerForm').classList.add('hidden'); $('loginForm').classList.remove('hidden'); };
+
+    if ($('doRegister')) {
+      $('doRegister').addEventListener('submit', e => {
+        e.preventDefault();
+        if ($('newPin').value !== $('confirmPin').value) { $('registerError').textContent = 'Las contraseñas no coinciden.'; return; }
+        const newUserObj = { username: $('newUser').value.trim(), pin: $('newPin').value };
+        localStorage.setItem(KEYS.user, JSON.stringify(newUserObj));
+        localStorage.setItem(KEYS.session, 'true');
+        location.reload();
+      });
+    }
+
+    if ($('doLogin')) {
+      $('doLogin').addEventListener('submit', e => {
+        e.preventDefault();
+        const u = getUser();
+        if (!u || $('loginUser').value.trim() !== u.username || $('loginPin').value !== u.pin) {
+          $('loginError').textContent = 'Usuario o contraseña incorrectos.'; return;
+        }
+        localStorage.setItem(KEYS.session, 'true');
+        location.reload();
+      });
+    }
+  }
+
+  // Update user info on subpages if logged in
+  if (user && $('welcomeUser')) {
+    $('welcomeUser').textContent = user.username;
+    if ($('userInitial')) $('userInitial').textContent = user.username.charAt(0).toUpperCase();
+  }
+
+  // Logout closes session WITHOUT deleting user account credentials
+  if ($('logout')) {
+    $('logout').onclick = () => {
+      localStorage.removeItem(KEYS.session);
+      window.location.replace('index.html');
+    };
+  }
+
+  // --- MÓDULO 1: COTIZACIONES ---
+  if ($('cotizForm')) {
+    const opDatePicker = flatpickr("#operationDate", { locale: "es", defaultDate: todayStr, dateFormat: "Y-m-d" });
+    opDatePicker.setDate(todayStr, true);
+
+    $('cotizForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const key = $('key').value.trim().toUpperCase();
+      const minutes = Number($('minutes').value);
+      const opDate = $('operationDate').value || todayStr;
+
+      if (!Number.isFinite(minutes) || minutes <= 0) { $('entryError').textContent = 'Ingresa un tiempo válido.'; return; }
+
+      const newRecord = {
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        type: 'Cotización',
+        key,
+        minutes,
+        date: opDate
+      };
+
+      records.unshift(newRecord);
+      saveRecords();
+      $('key').value = ''; $('minutes').value = ''; $('entryError').textContent = '';
+      opDatePicker.setDate(todayStr, true);
+      cotizPage = 1;
+      renderCotizaciones();
     });
 
-    const cotizaciones = filtered.filter(r => r.type === 'Cotización');
-    const pedidos = filtered.filter(r => r.type === 'Pedido especial');
-    const avgCotiz = cotizaciones.length ? cotizaciones.reduce((s,r) => s + Number(r.minutes), 0) / cotizaciones.length : 0;
-    
-    $('totalCotizStat').textContent = cotizaciones.length;
-    $('averageStat').textContent = avgCotiz.toFixed(1) + ' min';
-    $('ordersStat').textContent = pedidos.length;
+    if ($('prevCotiz')) $('prevCotiz').onclick = () => { if (cotizPage > 1) { cotizPage--; renderCotizaciones(); } };
+    if ($('nextCotiz')) $('nextCotiz').onclick = () => { cotizPage++; renderCotizaciones(); };
 
-    // --- RENDER COTIZACIONES (PAGINACIÓN 10 EN 10) ---
-    const totalPagesCotiz = Math.ceil(cotizaciones.length / PAGE_SIZE) || 1;
-    if (cotizPage > totalPagesCotiz) cotizPage = totalPagesCotiz;
-    const cotizStart = (cotizPage - 1) * PAGE_SIZE;
-    const cotizToRender = cotizaciones.slice(cotizStart, cotizStart + PAGE_SIZE);
+    renderCotizaciones();
+  }
 
-    $('cotizPageInfo').textContent = `Página ${cotizPage} de ${totalPagesCotiz}`;
-    $('prevCotiz').disabled = cotizPage === 1;
-    $('nextCotiz').disabled = cotizPage >= totalPagesCotiz;
+  function renderCotizaciones() {
+    const cotizList = records.filter(r => r.type === 'Cotización');
+    const totalPages = Math.ceil(cotizList.length / PAGE_SIZE) || 1;
+    if (cotizPage > totalPages) cotizPage = totalPages;
+    const start = (cotizPage - 1) * PAGE_SIZE;
+    const toRender = cotizList.slice(start, start + PAGE_SIZE);
 
-    const cotizBody = $('cotizBody'); cotizBody.innerHTML = '';
-    $('emptyCotiz').classList.toggle('hidden', cotizaciones.length > 0);
+    if ($('cotizPageInfo')) $('cotizPageInfo').textContent = `Página ${cotizPage} de ${totalPages}`;
+    if ($('prevCotiz')) $('prevCotiz').disabled = cotizPage === 1;
+    if ($('nextCotiz')) $('nextCotiz').disabled = cotizPage >= totalPages;
 
-    cotizToRender.forEach(r => {
+    const tbody = $('cotizBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if ($('emptyCotiz')) $('emptyCotiz').classList.toggle('hidden', cotizList.length > 0);
+
+    toRender.forEach(r => {
       const tr = document.createElement('tr');
       tr.className = 'hover:bg-slate-800/40 transition-colors';
       tr.innerHTML = `<td class="p-3.5 text-slate-300">${r.date || todayStr}</td><td class="p-3.5 font-medium text-white uppercase">${r.key}</td><td class="p-3.5 text-brand-400 font-semibold">${Number(r.minutes).toFixed(1)} min</td>`;
@@ -483,64 +181,159 @@
       del.textContent = 'Eliminar';
       del.onclick = () => {
         if (confirm('¿Eliminar esta cotización?')) {
-          records = records.filter(x => x.id !== r.id); saveRecords(); render();
-          if (!$('weeklySection').classList.contains('hidden')) renderReport(reportStart, reportEnd);
+          records = records.filter(x => x.id !== r.id);
+          saveRecords();
+          renderCotizaciones();
         }
       };
-      tdAction.appendChild(del); tr.appendChild(tdAction); cotizBody.appendChild(tr);
+      tdAction.appendChild(del);
+      tr.appendChild(tdAction);
+      tbody.appendChild(tr);
+    });
+  }
+
+  // --- MÓDULO 2: PEDIDOS ESPECIALES ---
+  if ($('pedidoForm')) {
+    const opDatePicker = flatpickr("#operationDate", { locale: "es", defaultDate: todayStr, dateFormat: "Y-m-d" });
+    opDatePicker.setDate(todayStr, true);
+    const arrivalDatePicker = flatpickr("#arrivalDate", { locale: "es", defaultDate: todayStr, dateFormat: "Y-m-d" });
+    arrivalDatePicker.setDate(todayStr, true);
+
+    $('pedidoForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const key = $('key').value.trim().toUpperCase();
+      const description = $('description').value.trim().toUpperCase();
+      const supplier = $('supplier').value.trim().toUpperCase();
+      const arrivalDate = $('arrivalDate').value;
+      const responsible = $('responsible').value.trim().toUpperCase();
+      const opDate = $('operationDate').value || todayStr;
+
+      const newRecord = {
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        type: 'Pedido especial',
+        key,
+        description,
+        supplier,
+        arrivalDate,
+        responsible,
+        date: opDate,
+        completed: false
+      };
+
+      records.unshift(newRecord);
+      saveRecords();
+      $('key').value = ''; $('description').value = ''; $('supplier').value = ''; $('responsible').value = '';
+      opDatePicker.setDate(todayStr, true);
+      arrivalDatePicker.setDate(todayStr, true);
+      pedidosPage = 1;
+      renderPedidos();
     });
 
-    // --- RENDER PEDIDOS ESPECIALES (PAGINACIÓN 10 EN 10 - F. Pedido antes de Llegada) ---
-    const totalPagesPedidos = Math.ceil(pedidos.length / PAGE_SIZE) || 1;
-    if (pedidosPage > totalPagesPedidos) pedidosPage = totalPagesPedidos;
-    const pedidosStart = (pedidosPage - 1) * PAGE_SIZE;
-    const pedidosToRender = pedidos.slice(pedidosStart, pedidosStart + PAGE_SIZE);
+    if ($('prevPedidos')) $('prevPedidos').onclick = () => { if (pedidosPage > 1) { pedidosPage--; renderPedidos(); } };
+    if ($('nextPedidos')) $('nextPedidos').onclick = () => { pedidosPage++; renderPedidos(); };
 
-    $('pedidosPageInfo').textContent = `Página ${pedidosPage} de ${totalPagesPedidos}`;
-    $('prevPedidos').disabled = pedidosPage === 1;
-    $('nextPedidos').disabled = pedidosPage >= totalPagesPedidos;
+    renderPedidos();
+  }
 
-    const pedidosBody = $('pedidosBody'); pedidosBody.innerHTML = '';
-    $('emptyPedidos').classList.toggle('hidden', pedidos.length > 0);
+  function renderPedidos() {
+    const pedidosList = records.filter(r => r.type === 'Pedido especial');
+    const totalPages = Math.ceil(pedidosList.length / PAGE_SIZE) || 1;
+    if (pedidosPage > totalPages) pedidosPage = totalPages;
+    const start = (pedidosPage - 1) * PAGE_SIZE;
+    const toRender = pedidosList.slice(start, start + PAGE_SIZE);
 
-    pedidosToRender.forEach(r => {
+    if ($('pedidosPageInfo')) $('pedidosPageInfo').textContent = `Página ${pedidosPage} de ${totalPages}`;
+    if ($('prevPedidos')) $('prevPedidos').disabled = pedidosPage === 1;
+    if ($('nextPedidos')) $('nextPedidos').disabled = pedidosPage >= totalPages;
+
+    const tbody = $('pedidosBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if ($('emptyPedidos')) $('emptyPedidos').classList.toggle('hidden', pedidosList.length > 0);
+
+    toRender.forEach(r => {
       const tr = document.createElement('tr');
       tr.className = 'hover:bg-slate-800/40 transition-colors';
       tr.innerHTML = `<td class="p-3.5 font-medium text-white uppercase">${r.key}</td><td class="p-3.5 text-slate-300 uppercase">${r.description || ''}</td><td class="p-3.5 text-slate-300 uppercase">${r.supplier || ''}</td>`;
 
       const tdAttended = document.createElement('td'); tdAttended.className = 'p-3.5 text-center';
       const label = document.createElement('label'); label.className = 'relative inline-flex items-center cursor-pointer';
-      const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = !!r.completed; checkbox.className = 'sr-only peer';
-      checkbox.onchange = () => { r.completed = checkbox.checked; saveRecords(); };
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = Boolean(r.completed);
+      checkbox.className = 'sr-only peer';
+
+      checkbox.onchange = (e) => {
+        const isChecked = e.target.checked;
+        r.completed = isChecked;
+        const target = records.find(item => item.id === r.id);
+        if (target) {
+          target.completed = isChecked;
+          saveRecords();
+        }
+      };
+
       const divSlider = document.createElement('div');
       divSlider.className = "w-9 h-5 bg-slate-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-400";
       label.appendChild(checkbox); label.appendChild(divSlider); tdAttended.appendChild(label); tr.appendChild(tdAttended);
 
-      // F. Pedido (r.date) impreso ANTES de la fecha de llegada (r.arrivalDate)
       tr.innerHTML += `<td class="p-3.5 text-slate-300">${r.date || todayStr}</td><td class="p-3.5 text-emerald-400 font-medium">${r.arrivalDate || ''}</td><td class="p-3.5 text-slate-300 uppercase">${r.responsible || ''}</td>`;
 
       const tdAction = document.createElement('td'); tdAction.className = 'p-3.5 text-right';
       const del = document.createElement('button');
       del.className = 'px-2.5 py-1 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 border border-rose-500/30 rounded-lg transition';
       del.textContent = 'Eliminar';
-      del.onclick = () => { if (confirm('¿Eliminar pedido?')) { records = records.filter(x => x.id !== r.id); saveRecords(); render(); } };
-      tdAction.appendChild(del); tr.appendChild(tdAction); pedidosBody.appendChild(tr);
+      del.onclick = () => {
+        if (confirm('¿Eliminar pedido?')) {
+          records = records.filter(x => x.id !== r.id);
+          saveRecords();
+          renderPedidos();
+        }
+      };
+      tdAction.appendChild(del); tr.appendChild(tdAction); tbody.appendChild(tr);
     });
   }
 
-  function renderMlView() {
-    const mlRecords = records.filter(r => r.type === 'Pedido Mercado Libre');
-    const totalPagesMl = Math.ceil(mlRecords.length / PAGE_SIZE) || 1;
-    if (mlPage > totalPagesMl) mlPage = totalPagesMl;
-    const mlStart = (mlPage - 1) * PAGE_SIZE;
-    const toRender = mlRecords.slice(mlStart, mlStart + PAGE_SIZE);
+  // --- MÓDULO 3: MERCADO LIBRE ---
+  if ($('mlForm')) {
+    $('mlForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const mlLink = $('mlUrlInput').value.trim();
+      const newRecord = {
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        type: 'Pedido Mercado Libre',
+        date: todayStr,
+        mlLink
+      };
 
-    $('mlViewPageInfo').textContent = `Página ${mlPage} de ${totalPagesMl}`;
-    $('prevMl').disabled = mlPage === 1;
-    $('nextMl').disabled = mlPage >= totalPagesMl;
+      records.unshift(newRecord);
+      saveRecords();
+      $('mlUrlInput').value = '';
+      mlPage = 1;
+      renderMl();
+    });
 
-    const tbody = $('mlTableBody'); tbody.innerHTML = '';
-    $('emptyMlView').classList.toggle('hidden', mlRecords.length > 0);
+    if ($('prevMl')) $('prevMl').onclick = () => { if (mlPage > 1) { mlPage--; renderMl(); } };
+    if ($('nextMl')) $('nextMl').onclick = () => { mlPage++; renderMl(); };
+
+    renderMl();
+  }
+
+  function renderMl() {
+    const mlList = records.filter(r => r.type === 'Pedido Mercado Libre');
+    const totalPages = Math.ceil(mlList.length / PAGE_SIZE) || 1;
+    if (mlPage > totalPages) mlPage = totalPages;
+    const start = (mlPage - 1) * PAGE_SIZE;
+    const toRender = mlList.slice(start, start + PAGE_SIZE);
+
+    if ($('mlViewPageInfo')) $('mlViewPageInfo').textContent = `Página ${mlPage} de ${totalPages}`;
+    if ($('prevMl')) $('prevMl').disabled = mlPage === 1;
+    if ($('nextMl')) $('nextMl').disabled = mlPage >= totalPages;
+
+    const tbody = $('mlTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if ($('emptyMlView')) $('emptyMlView').classList.toggle('hidden', mlList.length > 0);
 
     toRender.forEach(r => {
       const tr = document.createElement('tr');
@@ -551,51 +344,253 @@
       const del = document.createElement('button');
       del.className = 'px-2.5 py-1 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 border border-rose-500/30 rounded-lg transition';
       del.textContent = 'Eliminar';
-      del.onclick = () => { if (confirm('¿Eliminar enlace?')) { records = records.filter(x => x.id !== r.id); saveRecords(); renderMlView(); } };
+      del.onclick = () => {
+        if (confirm('¿Eliminar enlace?')) {
+          records = records.filter(x => x.id !== r.id);
+          saveRecords();
+          renderMl();
+        }
+      };
       tdAction.appendChild(del); tr.appendChild(tdAction); tbody.appendChild(tr);
     });
   }
 
-  $('clearFilters').onclick = () => {
-    rangePicker.setDate([todayStr, todayStr], true);
-    startDateFilter = todayStr; endDateFilter = todayStr;
-    cotizPage = 1; pedidosPage = 1;
-    render();
-  };
+  // --- MÓDULO 4: DASHBOARD & REPORTE ESTADÍSTICO (ESTILO EXCEL) ---
+  function initDashboard() {
+    const cotizList = records.filter(r => r.type === 'Cotización');
 
+    // Cálculos Estadísticos Globales (Estilo Excel)
+    const N = cotizList.length;
+    const suma = cotizList.reduce((acc, r) => acc + Number(r.minutes), 0);
+    const promedio = N > 0 ? suma / N : 0;
+    const varianza = N > 0 ? cotizList.reduce((acc, r) => acc + Math.pow(Number(r.minutes) - promedio, 2), 0) / N : 0;
+    const desvStd = Math.sqrt(varianza);
 
+    // Pintar tarjetas de estadísticas
+    if ($('statN')) $('statN').textContent = N;
+    if ($('statSum')) $('statSum').textContent = suma.toFixed(1) + ' min';
+    if ($('statMean')) $('statMean').textContent = promedio.toFixed(2) + ' min';
+    if ($('statVariance')) $('statVariance').textContent = varianza.toFixed(2);
+    if ($('statStdDev')) $('statStdDev').textContent = desvStd.toFixed(2);
 
-  (function() {
-      const line1Text = "Autopartes, Toro";
-      const line2Text = " Dept. Cotizaciones.";
-      const typingSpeed = 100, erasingSpeed = 60, pauseTime = 2000;
+    const firstDayMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`;
+    renderReport(firstDayMonth, todayStr, promedio, desvStd);
+    if ($('weeklyRangeTitle')) $('weeklyRangeTitle').textContent = `Mes en curso (${firstDayMonth} al ${todayStr})`;
 
-      function iniciarEfectoTypewriter() {
-        const elLine1 = document.getElementById('typedLine1');
-        const elLine2 = document.getElementById('typedLine2');
-        if (!elLine1 || !elLine2) return;
-
-        let i = 0, j = 0, isDeleting = false;
-        function loop() {
-          if (!isDeleting && i <= line1Text.length) {
-            elLine1.textContent = line1Text.substring(0, i); i++; setTimeout(loop, typingSpeed);
-          } else if (!isDeleting && j <= line2Text.length) {
-            elLine2.textContent = line2Text.substring(0, j); j++; setTimeout(loop, typingSpeed);
-          } else if (!isDeleting && i > line1Text.length && j > line2Text.length) {
-            isDeleting = true; setTimeout(loop, pauseTime);
-          } else if (isDeleting && j > 0) {
-            j--; elLine2.textContent = line2Text.substring(0, j); setTimeout(loop, erasingSpeed);
-          } else if (isDeleting && i > 0) {
-            i--; elLine1.textContent = line1Text.substring(0, i); setTimeout(loop, erasingSpeed);
-          } else if (isDeleting && i === 0 && j === 0) {
-            isDeleting = false; setTimeout(loop, 500);
-          }
+    flatpickr("#reportRangeSelector", {
+      mode: "range", locale: "es", dateFormat: "Y-m-d", defaultDate: [firstDayMonth, todayStr],
+      onChange: function(selectedDates, dateStr, instance) {
+        if (selectedDates.length === 2) {
+          const start = instance.formatDate(selectedDates[0], "Y-m-d");
+          const end = instance.formatDate(selectedDates[1], "Y-m-d");
+          renderReport(start, end, promedio, desvStd);
+          $('weeklyRangeTitle').textContent = `Rango personalizado`;
         }
-        loop();
       }
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciarEfectoTypewriter);
-      else iniciarEfectoTypewriter();
-    })();
+    });
 
-  if(!getUser()) $('loginError').textContent = 'Crea tu acceso local para comenzar.';
+    // Renderizar Tablas por Días de la Semana (Estilo Excel)
+    renderExcelDaysTables(cotizList, promedio);
+
+    if ($('exportBtn')) {
+      $('exportBtn').onclick = () => {
+        const cotiz = records.filter(r => r.type === 'Cotización');
+        const pedidos = records.filter(r => r.type === 'Pedido especial');
+        const ml = records.filter(r => r.type === 'Pedido Mercado Libre');
+
+        if (cotiz.length) downloadJson(cotiz, 'cotizaciones.json');
+        if (pedidos.length) downloadJson(pedidos, 'pedidos-especiales.json');
+        if (ml.length) downloadJson(ml, 'mercado-libre.json');
+        alert('Archivos JSON exportados correctamente.');
+      };
+    }
+
+    if ($('importFile')) {
+      $('importFile').onchange = async e => {
+        const files = e.target.files;
+        if (!files.length) return;
+        let all = [...records];
+        for (let f of files) {
+          try {
+            const json = JSON.parse(await f.text());
+            const incoming = Array.isArray(json) ? json : (json.records || []);
+            incoming.forEach(inc => {
+              const existingIndex = all.findIndex(r => r.id === inc.id);
+              if (existingIndex !== -1) {
+                all[existingIndex] = { ...all[existingIndex], ...inc };
+              } else {
+                all.push(inc);
+              }
+            });
+          } catch (err) { console.error(err); }
+        }
+        records = all; saveRecords(); alert('¡Importación completada!'); location.reload();
+      };
+    }
+
+    if ($('purgeBtn')) {
+      $('purgeBtn').onclick = () => {
+        const dias = prompt('¿Cuántos días conservar?', '90');
+        if (!dias) return;
+        const limit = new Date(); limit.setDate(limit.getDate() - parseInt(dias, 10));
+        const limitStr = getLocalDateString(limit);
+        records = records.filter(r => (r.date || todayStr) >= limitStr);
+        saveRecords(); location.reload();
+      };
+    }
+
+    if ($('downloadReportImg')) {
+      $('downloadReportImg').onclick = async () => {
+        const canvas = await html2canvas($('weeklyReportCapture'), { backgroundColor: '#0f172a', scale: 2 });
+        const a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = 'reporte-estadistico.png'; a.click();
+      };
+    }
+  }
+
+  function renderExcelDaysTables(cotizList, globalMean) {
+    const container = $('excelTablesContainer');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (cotizList.length === 0) {
+      container.innerHTML = '<div class="text-center text-slate-500 py-6 text-sm">No hay registros de cotizaciones para mostrar en tablas diarias.</div>';
+      return;
+    }
+
+    const groupedByDate = {};
+    cotizList.forEach(r => {
+      const d = r.date || todayStr;
+      if (!groupedByDate[d]) groupedByDate[d] = [];
+      groupedByDate[d].push(r);
+    });
+
+    const sortedDates = Object.keys(groupedByDate).sort();
+
+    sortedDates.forEach(date => {
+      const items = groupedByDate[date];
+      const daySum = items.reduce((acc, r) => acc + Number(r.minutes), 0);
+      const dayMean = items.length > 0 ? daySum / items.length : 0;
+
+      const card = document.createElement('div');
+      card.className = 'bg-slate-950 border border-slate-800 rounded-xl overflow-hidden p-4 space-y-3';
+
+      let html = `
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+          <span class="text-xs font-bold uppercase text-brand-400"><i class="fa-solid fa-calendar-day mr-1.5"></i> Fecha: ${date}</span>
+          <span class="text-xs text-slate-400">Cotizaciones: <strong>${items.length}</strong> | Suma: <strong>${daySum.toFixed(1)} min</strong> | Promedio día: <strong class="text-brand-400">${dayMean.toFixed(1)} min</strong></span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="bg-slate-900 border-b border-slate-800 text-slate-400 uppercase text-[10px]">
+                <th class="p-2.5">N</th>
+                <th class="p-2.5">Clave (xi ref)</th>
+                <th class="p-2.5">Minutos (xi)</th>
+                <th class="p-2.5">Media (x̄)</th>
+                <th class="p-2.5">Desviación (xi - x̄)</th>
+                <th class="p-2.5">Cuadrático ((xi - x̄)²)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/40">
+      `;
+
+      items.forEach((r, idx) => {
+        const xi = Number(r.minutes);
+        const diff = xi - globalMean;
+        const diffSq = Math.pow(diff, 2);
+        html += `
+          <tr class="hover:bg-slate-900/50 transition">
+            <td class="p-2.5 text-slate-400 font-mono">${idx + 1}</td>
+            <td class="p-2.5 text-white font-semibold uppercase">${r.key}</td>
+            <td class="p-2.5 text-brand-400 font-bold">${xi.toFixed(1)} min</td>
+            <td class="p-2.5 text-slate-300">${globalMean.toFixed(2)}</td>
+            <td class="p-2.5 text-slate-300">${diff.toFixed(2)}</td>
+            <td class="p-2.5 text-slate-400 font-mono">${diffSq.toFixed(2)}</td>
+          </tr>
+        `;
+      });
+
+      html += `
+            </tbody>
+          </table>
+        </div>
+      `;
+      card.innerHTML = html;
+      container.appendChild(card);
+    });
+  }
+
+  function renderReport(startRange, endRange, globalMean, globalStd) {
+    if (!$('weeklyChart')) return;
+    const periodCotiz = records.filter(r => r.type === 'Cotización' && (r.date || todayStr) >= startRange && (r.date || todayStr) <= endRange);
+
+    if (periodCotiz.length === 0) {
+      if (weeklyChartInstance) { weeklyChartInstance.destroy(); weeklyChartInstance = null; }
+      return;
+    }
+
+    // Ordenar cronológicamente para graficar cada cotización en orden
+    const sortedCotiz = [...periodCotiz].sort((a, b) => (a.date || todayStr).localeCompare(b.date || todayStr));
+
+    const chartLabels = sortedCotiz.map((r, idx) => `#${idx + 1} (${r.key || 'N/A'})`);
+    const chartData = sortedCotiz.map(r => Number(Number(r.minutes).toFixed(1)));
+    const meanLineData = sortedCotiz.map(() => Number(globalMean.toFixed(1)));
+
+    const ctx = $('weeklyChart').getContext('2d');
+    if (weeklyChartInstance) weeklyChartInstance.destroy();
+    weeklyChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: chartLabels,
+        datasets: [
+          { 
+            label: 'Cotización Individual (xi min)', 
+            data: chartData, 
+            borderColor: '#4ce0a0', 
+            backgroundColor: '#4ce0a0', 
+            borderWidth: 2, 
+            pointRadius: 4,
+            tension: 0.1 
+          },
+          { 
+            label: 'Media Global (x̄)', 
+            data: meanLineData, 
+            borderColor: '#38bdf8', 
+            borderDash: [5, 5], 
+            borderWidth: 1.5, 
+            pointRadius: 0 
+          }
+        ]
+      },
+      options: { 
+        responsive: true, 
+        maintainAspectRatio: false, 
+        plugins: { 
+          legend: { labels: { color: '#cbd5e1' } },
+          tooltip: {
+            callbacks: {
+              title: function(context) {
+                const index = context[0].dataIndex;
+                const item = sortedCotiz[index];
+                return `Fecha: ${item.date || todayStr} | Clave: ${item.key}`;
+              },
+              afterBody: function() {
+                return `Desv. Estándar Global (s): ${globalStd.toFixed(2)} min`;
+              }
+            }
+          }
+        }, 
+        scales: { 
+          x: { ticks: { color: '#94a3b8', maxTicksLimit: 15 } }, 
+          y: { beginAtZero: true, ticks: { color: '#94a3b8' } } 
+        } 
+      }
+    });
+  }
+
+  function downloadJson(data, filename) {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
+  }
 })();
