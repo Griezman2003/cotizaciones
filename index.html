@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es" class="h-full bg-slate-950 text-slate-100">
+<html lang="es" class="h-full bg-slate-900 text-slate-100">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard | Cotizaciones</title>
+  <title>Dashboard & Reporte | Autopartes Toro</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -11,187 +11,230 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script>
-    tailwind.config = { theme: { extend: { colors: { brand: { 400: '#4ce0a0', 500: '#22c55e', 950: '#032e1d' } } } } }
+    tailwind.config = { theme: { extend: { colors: { brand: { 400: '#10b981', 500: '#059669', 950: '#022c22' } } } } }
   </script>
 </head>
-<body class="min-h-full flex flex-col font-sans bg-slate-950 text-slate-100 antialiased selection:bg-brand-400 selection:text-slate-950">
+<body class="min-h-full flex flex-col font-sans bg-slate-900 text-slate-100 antialiased">
 
-  <section id="authView" class="min-h-screen w-full grid grid-cols-1 lg:grid-cols-12 bg-slate-950 font-sans">
-    <aside class="hidden lg:flex lg:col-span-7 flex-col justify-between p-16 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-r border-slate-800/50 relative overflow-hidden">
-      <div class="absolute -top-40 -left-40 w-[500px] h-[500px] bg-brand-400/15 rounded-full blur-[128px] pointer-events-none"></div>
+  <div id="authView" class="hidden min-h-screen w-full flex bg-slate-950 font-sans text-slate-100 antialiased overflow-hidden">
+
+    <div class="w-full lg:w-1/2 flex flex-col justify-between p-8 sm:p-12 lg:p-16 xl:p-20 z-10 bg-slate-900/90 backdrop-blur-xl border-r border-slate-800">
       
-      <div class="flex items-center gap-3.5 text-2xl font-black text-white z-10">
-        <span class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-500 to-brand-400 text-slate-950 grid place-items-center font-black text-xl shadow-lg shadow-brand-400/25">C</span>
-        <span>Dept Cotizaciones</span>
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-emerald-500 text-slate-950 font-black text-lg rounded-xl grid place-items-center shadow-lg shadow-emerald-500/10">
+          T
+        </div>
+        <span class="font-bold text-base tracking-tight text-white">Sistema Cotizaciones</span>
       </div>
 
-      <div class="max-w-2xl my-auto py-12 z-10 space-y-6">
-        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-400/10 border border-brand-400/20 backdrop-blur-md">
-          <span class="w-2 h-2 rounded-full bg-brand-400 animate-ping"></span>
-          <span class="text-xs font-bold tracking-widest uppercase text-brand-400">Espacio de trabajo</span>
+      <div class="max-w-md w-full mx-auto space-y-8 my-auto py-8">
+        
+        <!-- FORMULARIO DE LOGIN -->
+        <div id="loginForm" class="space-y-6">
+          <div class="space-y-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Control de Acceso</span>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Iniciar Sesión</h1>
+            <p class="text-xs text-slate-400">Ingresa tus credenciales para administrar el sistema.</p>
+          </div>
+
+          <form id="doLogin" class="space-y-4">
+            <div class="space-y-1.5">
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Usuario</label>
+              <div class="relative">
+                <input id="loginUser" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500 transition">
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Contraseña / PIN</label>
+              <div class="relative">
+                <input id="loginPin" type="password" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500 transition">
+              </div>
+            </div>
+
+            <button class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-emerald-500/10 transition mt-2">
+              Iniciar Sesión
+            </button>
+            <div id="loginError" class="text-rose-400 text-xs text-center font-medium"></div>
+          </form>
+
+          <div class="text-center pt-2">
+            <button id="showRegister" class="text-xs text-emerald-400 hover:text-emerald-300 font-semibold transition">¿Primera vez? Configurar cuenta inicial</button>
+          </div>
         </div>
 
-        <h1 class="text-5xl xl:text-7xl font-extrabold tracking-tight text-white leading-[1.1] min-h-[2.4em]">
-          <span id="typedLine1"></span><br>
-          <span id="typedLine2" class="bg-gradient-to-r from-brand-400 via-emerald-300 to-brand-500 bg-clip-text text-transparent"></span><span class="animate-pulse text-brand-400">|</span>
-        </h1>
+        <div id="registerForm" class="space-y-6 hidden">
+          <div class="space-y-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Configuración</span>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Registro Inicial</h1>
+            <p class="text-xs text-slate-400">Crea el usuario administrador del sistema.</p>
+          </div>
 
-        <p class="text-slate-400 text-lg leading-relaxed max-w-xl font-normal">
-          Control diario del departamento de cotizaciones, sistema beta.
+          <form id="doRegister" class="space-y-4">
+            <div class="space-y-1.5">
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Nuevo Usuario</label>
+              <input id="newUser" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500 transition">
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Contraseña / PIN</label>
+              <input id="newPin" type="password" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500 transition">
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Confirmar Contraseña</label>
+              <input id="confirmPin" type="password" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500 transition">
+            </div>
+
+            <button class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-emerald-500/10 transition mt-2">
+              Registrar y Acceder
+            </button>
+            <div id="registerError" class="text-rose-400 text-xs text-center font-medium"></div>
+          </form>
+
+          <div class="text-center pt-2">
+            <button id="showLogin" class="text-xs text-slate-400 hover:text-slate-300 font-semibold transition">← Volver al inicio de sesión</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="text-xs text-slate-500">
+        <span>Gamaliel © 2026</span>
+      </div>
+    </div>
+
+    <div class="hidden lg:flex lg:w-1/2 relative bg-gradient-to-tr from-indigo-950 via-slate-900 to-emerald-950 overflow-hidden items-center justify-center p-12">
+
+      <div class="absolute -top-32 -right-32 w-[500px] h-[500px] bg-emerald-500/20 rounded-full blur-[120px] pointer-events-none"></div>
+      <div class="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-indigo-500/20 rounded-full blur-[120px] pointer-events-none"></div>
+      
+      <div class="relative z-10 max-w-lg bg-slate-900/40 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 shadow-2xl space-y-4">
+        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 grid place-items-center text-emerald-400">
+          <i class="fa-solid fa-chart-pie text-sm"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white">Una alternativa para dejar el excel</h3>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          Pequeño sistema para la gestion de cotitaziones de una forma mas eficiente.
         </p>
       </div>
 
-      <div class="text-xs text-slate-500 z-10">Blurryface · Aplicación local</div>
-    </aside>
-
-    <main class="lg:col-span-5 flex items-center justify-center p-8 bg-slate-950">
-      <div class="w-full max-w-md space-y-6">
-        <div id="loginForm" class="space-y-6">
-          <div class="space-y-2">
-            <span class="text-xs font-bold tracking-widest uppercase text-brand-400">Bienvenido de nuevo</span>
-            <h2 class="text-3xl font-extrabold text-white">Inicia sesión</h2>
-          </div>
-          <form id="doLogin" class="space-y-4">
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-2">Usuario</label>
-              <input id="loginUser" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white focus:border-brand-400 focus:outline-none">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-2">Contraseña / PIN</label>
-              <input id="loginPin" type="password" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white focus:border-brand-400 focus:outline-none">
-            </div>
-            <button class="w-full py-3.5 bg-brand-400 text-slate-950 font-bold rounded-xl hover:bg-emerald-400 transition shadow-lg shadow-brand-400/20">Entrar</button>
-            <div id="loginError" class="text-red-400 text-xs min-h-[1.25rem]"></div>
-          </form>
-          <div class="text-center text-sm text-slate-400">¿Es tu primera vez? <button id="showRegister" class="text-brand-400 font-bold hover:underline bg-transparent border-0 p-0 cursor-pointer">Crear acceso local</button></div>
-        </div>
-
-        <div id="registerForm" class="hidden space-y-6">
-          <div class="space-y-2">
-            <span class="text-xs font-bold tracking-widest uppercase text-brand-400">Configuración inicial</span>
-            <h2 class="text-3xl font-extrabold text-white">Crea tu acceso</h2>
-          </div>
-          <form id="doRegister" class="space-y-4">
-            <div><label class="block text-xs font-semibold text-slate-300 mb-2">Usuario</label><input id="newUser" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white"></div>
-            <div><label class="block text-xs font-semibold text-slate-300 mb-2">PIN</label><input id="newPin" type="password" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white"></div>
-            <div><label class="block text-xs font-semibold text-slate-300 mb-2">Confirmar PIN</label><input id="confirmPin" type="password" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white"></div>
-            <button class="w-full py-3.5 bg-brand-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-brand-400/20">Crear cuenta</button>
-            <div id="registerError" class="text-red-400 text-xs min-h-[1.25rem]"></div>
-          </form>
-          <div class="text-center text-sm"><button id="showLogin" class="text-brand-400 font-bold bg-transparent border-0 p-0 cursor-pointer">Volver a iniciar sesión</button></div>
-        </div>
+      <div class="absolute bottom-8 right-12 flex gap-1.5 z-10">
+        <span class="w-6 h-1.5 bg-emerald-400 rounded-full"></span>
+        <span class="w-1.5 h-1.5 bg-slate-600 rounded-full"></span>
+        <span class="w-1.5 h-1.5 bg-slate-600 rounded-full"></span>
       </div>
-    </main>
-  </section>
+    </div>
 
-  <section id="appView" class="hidden min-h-screen w-full flex flex-col lg:flex-row bg-slate-950 relative">
-    <button id="mobileToggle" class="lg:hidden absolute top-4 left-4 z-50 p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-brand-400"><i class="fa-solid fa-bars"></i></button>
+  </div>
 
-    <aside id="sidebar" class="w-20 bg-slate-900/90 border-r border-slate-800/80 p-4 flex flex-col justify-between shrink-0 transition-all duration-300 fixed lg:static inset-y-0 left-0 z-40 -translate-x-full lg:translate-x-0">
+  <div id="appView" class="hidden min-h-screen w-full flex flex-col lg:flex-row relative">
+    <button id="mobileToggle" class="lg:hidden absolute top-4 left-4 z-50 p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-emerald-400"><i class="fa-solid fa-bars"></i></button>
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="w-20 bg-slate-950 border-r border-slate-800 p-4 flex flex-col justify-between shrink-0 transition-all duration-300 fixed lg:static inset-y-0 left-0 z-40 -translate-x-full lg:translate-x-0">
       <div class="space-y-6">
         <div class="flex items-center justify-between px-1 py-1">
-          <div class="flex items-center gap-3 text-xl font-black text-white overflow-hidden">
-            <span class="w-8 h-8 rounded-lg bg-brand-400 text-slate-950 grid place-items-center font-black shrink-0">C</span>
-            <span class="sidebar-text hidden whitespace-nowrap">Toro</span>
+          <div class="flex items-center gap-3 text-xl font-bold text-white overflow-hidden">
+            <span class="w-8 h-8 rounded-lg bg-emerald-500 text-slate-950 grid place-items-center font-black shrink-0">T</span>
+            <span class="sidebar-text hidden whitespace-nowrap text-sm tracking-wide">Sistema Cotizaciones</span>
           </div>
           <button id="collapseBtn" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"><i class="fa-solid fa-bars-staggered"></i></button>
         </div>
         
-        <nav class="space-y-2">
-          <a href="index.html" class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-xs font-semibold text-brand-400 bg-brand-400/10 border border-brand-400/30 transition">
-            <i class="fa-solid fa-chart-line text-lg shrink-0"></i><span class="sidebar-text hidden whitespace-nowrap">Dashboard & Reporte</span>
+        <nav class="space-y-1.5">
+          <a href="index.html" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 transition">
+            <i class="fa-solid fa-chart-line text-base shrink-0"></i><span class="sidebar-text hidden whitespace-nowrap">Dashboard</span>
           </a>
-          <a href="cotizaciones.html" class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/50 transition">
-            <i class="fa-solid fa-file-invoice-dollar text-lg shrink-0"></i><span class="sidebar-text hidden whitespace-nowrap">Cotizaciones</span>
+          <a href="cotizaciones.html" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition">
+            <i class="fa-solid fa-file-invoice-dollar text-base shrink-0"></i><span class="sidebar-text hidden whitespace-nowrap">Cotizaciones</span>
           </a>
-          <a href="pedidos.html" class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/50 transition">
-            <i class="fa-solid fa-boxes-packing text-lg shrink-0"></i><span class="sidebar-text hidden whitespace-nowrap">Pedidos Especiales</span>
+          <a href="pedidos.html" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition">
+            <i class="fa-solid fa-boxes-packing text-base shrink-0"></i><span class="sidebar-text hidden whitespace-nowrap">Pedidos Especiales</span>
           </a>
-          <a href="mercadolibre.html" class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/50 transition">
-            <i class="fa-solid fa-store text-lg shrink-0"></i><span class="sidebar-text hidden whitespace-nowrap">Mercado Libre</span>
+          <a href="mercadolibre.html" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition">
+            <i class="fa-solid fa-store text-base shrink-0"></i><span class="sidebar-text hidden whitespace-nowrap">Mercado Libre</span>
           </a>
         </nav>
       </div>
-
-      <div class="pt-4 border-t border-slate-800/80 flex items-center justify-between">
-        <div class="flex items-center gap-2 text-xs text-slate-300 overflow-hidden">
-          <span class="w-7 h-7 rounded-full bg-emerald-950 text-brand-400 border border-brand-400/30 flex items-center justify-center font-bold shrink-0" id="userInitial">U</span>
-          <span id="welcomeUser" class="sidebar-text hidden font-medium truncate">Usuario</span>
+      <div class="pt-4 border-t border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-2.5 text-xs text-slate-300 overflow-hidden">
+          <span class="w-7 h-7 rounded-full bg-emerald-950 text-emerald-400 flex items-center justify-center font-bold shrink-0 border border-emerald-500/30" id="userInitial">U</span>
+          <span id="welcomeUser" class="sidebar-text hidden truncate font-medium">Usuario</span>
         </div>
-        <button id="logout" class="p-2 text-slate-400 hover:text-white text-xs" title="Cerrar sesión"><i class="fa-solid fa-power-off"></i></button>
+        <button id="logout" class="p-2 text-slate-400 hover:text-white text-xs transition"><i class="fa-solid fa-power-off"></i></button>
       </div>
     </aside>
 
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-950/70 z-30 hidden lg:hidden"></div>
 
-    <main class="flex-1 flex flex-col overflow-y-auto p-4 sm:p-8 space-y-6 pt-16 lg:pt-8">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-800/50">
+    <main class="flex-1 flex flex-col overflow-y-auto p-4 sm:p-8 space-y-6 pt-16 lg:pt-8 bg-slate-900">
+      
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-800 gap-4">
         <div>
-          <h1 class="text-3xl font-extrabold text-white tracking-tight">Dashboard</h1>
-          <p class="text-slate-400 text-sm mt-1">Control de cotizaciones.</p>
+          <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+            <span id="typedLine1" class="text-emerald-400"></span><span id="typedLine2" class="text-slate-300"></span><span class="animate-pulse">|</span>
+          </h1>
+          <p class="text-slate-400 text-xs mt-0.5">Dashboard analítico y estadísticas de rendimiento en tiempo real.</p>
         </div>
-        <div class="flex items-center gap-2.5 flex-wrap">
-          <button id="exportBtn" class="px-3.5 py-2 rounded-xl border border-slate-700 hover:border-slate-500 text-slate-200 text-xs font-semibold bg-slate-900/40"><i class="fa-solid fa-download mr-1.5"></i> Exportar</button>
-          <button id="purgeBtn" class="px-3.5 py-2 rounded-xl border border-rose-500/40 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 text-xs font-semibold"><i class="fa-solid fa-broom mr-1.5"></i> Purgar</button>
-          <label class="px-3.5 py-2 rounded-xl border border-slate-700 text-slate-200 text-xs font-semibold bg-slate-900/40 cursor-pointer"><i class="fa-solid fa-upload mr-1.5"></i> Importar <input id="importFile" type="file" accept="application/json" multiple class="hidden"></label>
-        </div>
-      </div>
 
-      <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
-        <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80">
-          <small class="text-slate-400 text-xs font-medium block">Suma Total</small>
-          <strong id="statSum" class="text-2xl font-black text-white mt-1 block">0 min</strong>
-        </div>
-        <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80">
-          <small class="text-slate-400 text-xs font-medium block">Conteo</small>
-          <strong id="statN" class="text-2xl font-black text-white mt-1 block">0</strong>
-        </div>
-        <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80">
-          <small class="text-slate-400 text-xs font-medium block">Media / Promedio</small>
-          <strong id="statMean" class="text-2xl font-black text-brand-400 mt-1 block">0 min</strong>
-        </div>
-        <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80">
-          <small class="text-slate-400 text-xs font-medium block">Varianza</small>
-          <strong id="statVariance" class="text-2xl font-black text-white mt-1 block">0</strong>
-        </div>
-        <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80">
-          <small class="text-slate-400 text-xs font-medium block">Desviación Estándar</small>
-          <strong id="statStdDev" class="text-2xl font-black text-emerald-400 mt-1 block">0</strong>
-        </div>
-      </div>
-
-      <div class="p-6 rounded-2xl bg-slate-900/90 border border-brand-400/30 shadow-lg space-y-5">
-        <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
-          <div>
-            <span class="text-xs font-bold uppercase text-brand-400">Gráfica</span>
-            <div class="flex items-center gap-2 mt-1">
-              <input type="text" id="reportRangeSelector" readonly placeholder="Filtrar por rango opcional" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white cursor-pointer min-w-[200px]">
-              <span id="weeklyRangeTitle" class="text-xs text-slate-300 font-medium">Mes en curso</span>
-            </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="relative">
+            <input type="text" id="reportRangeSelector" placeholder="Seleccionar rango..." class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 cursor-pointer">
           </div>
-          <button id="downloadReportImg" class="px-3.5 py-2 rounded-xl bg-brand-400 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition"><i class="fa-solid fa-camera mr-1"></i> Descargar Imagen</button>
+          <button id="exportBtn" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-download text-emerald-400"></i> Exportar</button>
+          <label class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer flex items-center gap-1.5"><i class="fa-solid fa-upload text-sky-400"></i> Importar<input type="file" id="importFile" accept=".json" multiple class="hidden"></label>
+          <button id="purgeBtn" class="px-3 py-2 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-xs font-semibold rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-trash-can"></i> Purgar</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700 shadow-sm space-y-1">
+          <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Conteo (N)</span>
+          <div id="statN" class="text-2xl font-bold text-white">0</div>
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700 shadow-sm space-y-1">
+          <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Suma Total</span>
+          <div id="statSum" class="text-2xl font-bold text-emerald-400">0 min</div>
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700 shadow-sm space-y-1">
+          <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Media (x̄)</span>
+          <div id="statMean" class="text-2xl font-bold text-sky-400">0 min</div>
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700 shadow-sm space-y-1">
+          <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Varianza (s²)</span>
+          <div id="statVariance" class="text-2xl font-bold text-white">0</div>
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700 shadow-sm space-y-1 col-span-2 sm:col-span-1">
+          <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Desv. Estándar (s)</span>
+          <div id="statStdDev" class="text-2xl font-bold text-amber-400">0</div>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 id="weeklyRangeTitle" class="text-sm font-bold text-white">Reporte Estadístico</h3>
         </div>
 
-        <div id="weeklyReportCapture" class="space-y-5 p-2 bg-slate-900 rounded-xl">
-          <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 relative h-72">
+        <div id="weeklyReportCapture" class="space-y-4 p-4 bg-slate-800/80 rounded-2xl border border-slate-700 shadow-sm">
+          <div class="p-4 rounded-xl bg-slate-900 border border-slate-700 relative h-72">
             <canvas id="weeklyChart"></canvas>
           </div>
-          <div id="chartExplanationBox" class="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs sm:text-sm text-slate-300 space-y-2">
+          <div id="chartExplanationBox" class="p-4 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm text-slate-300 space-y-2">
           </div>
         </div>
       </div>
-
-      <div class="p-6 rounded-2xl bg-slate-900/90 border border-slate-800/80 shadow-lg space-y-4">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-          <h3 class="text-base font-bold text-white"><i class="fa-solid fa-table-cells text-brand-400 mr-2"></i> Desglose Detallado</h3>
-        </div>
-        <div id="excelTablesContainer" class="space-y-6">
+      <div class="space-y-4">
+        <h3 class="text-sm font-bold text-white">Desglose Diario por Cotización (Estilo Excel)</h3>
+        <div id="excelTablesContainer" class="space-y-4">
         </div>
       </div>
+
     </main>
-  </section>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>

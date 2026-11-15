@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" class="h-full bg-slate-950 text-slate-100">
+<html lang="es" class="h-full bg-slate-900 text-slate-100">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,129 +10,177 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script>
-    tailwind.config = { theme: { extend: { colors: { brand: { 400: '#4ce0a0', 500: '#22c55e', 950: '#032e1d' } } } } }
+    tailwind.config = { theme: { extend: { colors: { brand: { 400: '#10b981', 500: '#059669', 950: '#022c22' } } } } }
   </script>
 </head>
-<body class="min-h-full flex flex-col font-sans bg-slate-950 text-slate-100 antialiased">
-  <div class="min-h-screen w-full flex flex-col lg:flex-row bg-slate-950 relative">
-    <button id="mobileToggle" class="lg:hidden absolute top-4 left-4 z-50 p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-brand-400"><i class="fa-solid fa-bars"></i></button>
+<body class="min-h-full flex flex-col font-sans bg-slate-900 text-slate-100 antialiased">
+  <div class="min-h-screen w-full flex flex-col lg:flex-row relative">
+    <button id="mobileToggle" class="lg:hidden absolute top-4 left-4 z-50 p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-emerald-400"><i class="fa-solid fa-bars"></i></button>
 
     <!-- SIDEBAR -->
-    <aside id="sidebar" class="w-20 bg-slate-900/90 border-r border-slate-800/80 p-4 flex flex-col justify-between shrink-0 transition-all duration-300 fixed lg:static inset-y-0 left-0 z-40 -translate-x-full lg:translate-x-0">
+    <aside id="sidebar" class="w-20 bg-slate-950 border-r border-slate-800 p-4 flex flex-col justify-between shrink-0 transition-all duration-300 fixed lg:static inset-y-0 left-0 z-40 -translate-x-full lg:translate-x-0">
       <div class="space-y-6">
         <div class="flex items-center justify-between px-1 py-1">
-          <div class="flex items-center gap-3 text-xl font-black text-white overflow-hidden">
-            <span class="w-8 h-8 rounded-lg bg-brand-400 text-slate-950 grid place-items-center font-black shrink-0">C</span>
-            <span class="sidebar-text hidden whitespace-nowrap">Toro</span>
+          <div class="flex items-center gap-3 text-xl font-bold text-white overflow-hidden">
+            <span class="w-8 h-8 rounded-lg bg-emerald-500 text-slate-950 grid place-items-center font-black shrink-0">T</span>
+            <span class="sidebar-text hidden whitespace-nowrap text-sm tracking-wide">Sistema Cotizaciones</span>
           </div>
           <button id="collapseBtn" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"><i class="fa-solid fa-bars-staggered"></i></button>
         </div>
         
-        <nav class="space-y-2">
-          <a href="index.html" class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/50 transition">
-            <i class="fa-solid fa-chart-line text-lg shrink-0"></i><span class="sidebar-text hidden whitespace-nowrap">Dashboard & Reporte</span>
+        <nav class="space-y-1.5">
+          <a href="index.html" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition">
+            <i class="fa-solid fa-chart-line text-base shrink-0"></i><span class="sidebar-text hidden whitespace-nowrap">Dashboard</span>
           </a>
-          <a href="cotizaciones.html" class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/50 transition">
-            <i class="fa-solid fa-file-invoice-dollar text-lg shrink-0"></i><span class="sidebar-text hidden whitespace-nowrap">Cotizaciones</span>
+          <a href="cotizaciones.html" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition">
+            <i class="fa-solid fa-file-invoice-dollar text-base shrink-0"></i><span class="sidebar-text hidden whitespace-nowrap">Cotizaciones</span>
           </a>
-          <a href="pedidos.html" class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-xs font-semibold text-brand-400 bg-brand-400/10 border border-brand-400/30 transition">
-            <i class="fa-solid fa-boxes-packing text-lg shrink-0"></i><span class="sidebar-text hidden whitespace-nowrap">Pedidos Especiales</span>
+          <a href="pedidos.html" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 transition">
+            <i class="fa-solid fa-boxes-packing text-base shrink-0"></i><span class="sidebar-text hidden whitespace-nowrap">Pedidos Especiales</span>
           </a>
-          <a href="mercadolibre.html" class="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/50 transition">
-            <i class="fa-solid fa-store text-lg shrink-0"></i><span class="sidebar-text hidden whitespace-nowrap">Mercado Libre</span>
+          <a href="mercadolibre.html" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition">
+            <i class="fa-solid fa-store text-base shrink-0"></i><span class="sidebar-text hidden whitespace-nowrap">Mercado Libre</span>
           </a>
         </nav>
       </div>
-      <div class="pt-4 border-t border-slate-800/80 flex items-center justify-between">
-        <div class="flex items-center gap-2 text-xs text-slate-300 overflow-hidden"><span class="w-7 h-7 rounded-full bg-emerald-950 text-brand-400 flex items-center justify-center font-bold shrink-0" id="userInitial">U</span><span id="welcomeUser" class="sidebar-text hidden truncate">Usuario</span></div>
-        <button id="logout" class="p-2 text-slate-400 hover:text-white text-xs"><i class="fa-solid fa-power-off"></i></button>
+      <div class="pt-4 border-t border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-2.5 text-xs text-slate-300 overflow-hidden">
+          <span class="w-7 h-7 rounded-full bg-emerald-950 text-emerald-400 flex items-center justify-center font-bold shrink-0 border border-emerald-500/30" id="userInitial">U</span>
+          <span id="welcomeUser" class="sidebar-text hidden truncate font-medium">Usuario</span>
+        </div>
+        <button id="logout" class="p-2 text-slate-400 hover:text-white text-xs transition"><i class="fa-solid fa-power-off"></i></button>
       </div>
     </aside>
 
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-950/70 z-30 hidden lg:hidden"></div>
 
-    <!-- SECCIÓN PEDIDOS ESPECIALES -->
-    <main class="flex-1 flex flex-col overflow-y-auto p-4 sm:p-8 space-y-6 pt-16 lg:pt-8">
-      <div class="flex items-center justify-between pb-2 border-b border-slate-800/50">
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="flex-1 flex flex-col overflow-y-auto p-4 sm:p-8 space-y-6 pt-16 lg:pt-8 bg-slate-900">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-800 gap-4">
         <div>
-          <h1 class="text-3xl font-extrabold text-white">Pedidos Especiales</h1>
-          <p class="text-slate-400 text-sm mt-1"></p>
+          <h1 class="text-2xl font-bold tracking-tight text-white">Pedidos Especiales</h1>
+          <p class="text-slate-400 text-xs mt-0.5">Control y seguimiento operativo de encargos especiales</p>
         </div>
+        <!-- Botón para abrir el modal -->
+        <button id="openModalBtn" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition flex items-center gap-2">
+          <i class="fa-solid fa-plus"></i> Nuevo Pedido Especial
+        </button>
       </div>
 
-      <div class="space-y-6">
-        
-        <!-- FORMULARIO -->
-        <section class="p-6 rounded-2xl bg-slate-900/70 border border-slate-800/80">
-          <h3 class="text-base font-bold text-white mb-4"><i class="fa-solid fa-plus text-brand-400 mr-2"></i> Gestión de Pedido Especial</h3>
+      <!-- MODAL FLOTANTE DEL FORMULARIO -->
+      <div id="pedidoModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden overflow-y-auto">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-3xl w-full shadow-2xl space-y-6 my-8 relative">
+          <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+            <h3 id="modalTitle" class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-boxes-packing text-emerald-400"></i> Gestión de Pedido Especial</h3>
+            <button id="closeModalBtn" class="p-2 text-slate-400 hover:text-white rounded-xl bg-slate-800/60 transition"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+
           <form id="pedidoForm" class="space-y-4">
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Clave</label><input id="key" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
-              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Descripción</label><input id="description" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
-              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Sucursal</label><input id="branch" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
-              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Atención</label><input id="attention" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
-              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Fecha Pedido</label><input type="text" id="operationDate" required readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white cursor-pointer"></div>
-              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Fecha Llegada</label><input type="text" id="arrivalDate" readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white cursor-pointer"></div>
-              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Proveedor</label><input id="supplier" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
-              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Folio</label><input id="folio" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
-              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Responsable</label><input id="responsible" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <div>
-                <label class="block text-xs font-semibold text-slate-300 mb-1">Estado</label>
-                <select id="status" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400 cursor-pointer">
+                <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Clave</label>
+                <input id="key" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-emerald-500 transition">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Descripción</label>
+                <input id="description" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-emerald-500 transition">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Sucursal</label>
+                <input id="branch" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-emerald-500 transition">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Atención</label>
+                <input id="attention" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-emerald-500 transition">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Fecha Pedido</label>
+                <input type="text" id="operationDate" required readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white cursor-pointer">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Fecha Llegada</label>
+                <input type="text" id="arrivalDate" readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white cursor-pointer">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Proveedor</label>
+                <input id="supplier" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-emerald-500 transition">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Folio</label>
+                <input id="folio" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-emerald-500 transition">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Responsable</label>
+                <input id="responsible" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-emerald-500 transition">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Estado</label>
+                <select id="status" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-emerald-500 transition cursor-pointer">
                   <option value="PENDIENTE">PENDIENTE</option>
                   <option value="COMPLETADO">COMPLETADO</option>
                   <option value="DEVOLUCIÓN">DEVOLUCIÓN</option>
                 </select>
               </div>
-              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Ticket</label><input id="ticket" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
-              <div><label class="block text-xs font-semibold text-slate-300 mb-1">Comentario</label><input id="comment" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-400"></div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Ticket</label>
+                <input id="ticket" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-emerald-500 transition">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Comentario</label>
+                <input id="comment" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white uppercase focus:outline-none focus:border-emerald-500 transition">
+              </div>
             </div>
             
-            <div class="pt-2 flex items-center justify-end gap-2">
-              <button type="button" id="cancelEditBtn" class="hidden px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition">Cancelar</button>
-              <button type="submit" id="pedidoSubmitBtn" class="px-6 py-2.5 bg-brand-400 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl transition">Guardar Pedido</button>
+            <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-800">
+              <button type="button" id="cancelEditBtn" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs uppercase tracking-wider rounded-xl transition">Cancelar</button>
+              <button type="submit" id="pedidoSubmitBtn" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition">Guardar Pedido</button>
             </div>
-            <div id="entryError" class="text-red-400 text-xs"></div>
+            <div id="entryError" class="text-rose-400 text-xs text-center font-medium"></div>
           </form>
-        </section>
-
-        <!-- TABLA DE HISTORIAL -->
-        <section class="p-6 rounded-2xl bg-slate-900/70 border border-slate-800/80 flex flex-col">
-          <h3 class="text-base font-bold text-white mb-4">Historial de Pedidos Especiales</h3>
-          <div class="w-full overflow-x-auto rounded-xl border border-slate-800">
-            <table class="w-full text-left text-xs border-collapse min-w-[1200px]">
-              <thead>
-                <tr class="bg-slate-950/80 border-b border-slate-800 text-slate-400 uppercase text-[10px]">
-                  <th class="p-3">Clave</th>
-                  <th class="p-3">Descripción</th>
-                  <th class="p-3">Sucursal</th>
-                  <th class="p-3">Atención</th>
-                  <th class="p-3">Fecha Pedido</th>
-                  <th class="p-3">Fecha Llegada</th>
-                  <th class="p-3">Proveedor</th>
-                  <th class="p-3">Folio</th>
-                  <th class="p-3">Responsable</th>
-                  <th class="p-3">Estado</th>
-                  <th class="p-3">Ticket</th>
-                  <th class="p-3">Comentario</th>
-                  <th class="p-3 text-right">Acción</th>
-                </tr>
-              </thead>
-              <tbody id="pedidosBody" class="divide-y divide-slate-800/60 bg-slate-900/30"></tbody>
-            </table>
-            <div id="emptyPedidos" class="text-center text-slate-500 py-8 text-sm">No hay pedidos especiales registrados.</div>
-          </div>
-          <div class="flex items-center justify-between pt-3 px-1 text-xs text-slate-400">
-            <span id="pedidosPageInfo">Página 1 de 1</span>
-            <div class="flex gap-1.5">
-              <button id="prevPedidos" class="px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-950 disabled:opacity-30">Anterior</button>
-              <button id="nextPedidos" class="px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-950 disabled:opacity-30">Siguiente</button>
-            </div>
-          </div>
-        </section>
-
+        </div>
       </div>
+
+      <!-- TABLA DE PEDIDOS -->
+      <section class="p-6 rounded-2xl bg-slate-800/80 border border-slate-700 shadow-sm flex flex-col space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold text-white">Historial de Pedidos Especiales</h3>
+          <button id="downloadPedidoImg" class="px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 text-xs font-semibold transition flex items-center gap-1.5 text-slate-300">
+            <i class="fa-solid fa-image text-emerald-400"></i> Descargar Reporte
+          </button>
+        </div>
+        <div class="w-full overflow-x-auto rounded-xl border border-slate-700/80">
+          <table class="w-full text-left text-xs border-collapse min-w-[1200px]">
+            <thead>
+              <tr class="bg-slate-900/90 border-b border-slate-700 text-slate-400 uppercase text-[10px] tracking-wider">
+                <th class="p-3">Clave</th>
+                <th class="p-3">Descripción</th>
+                <th class="p-3">Sucursal</th>
+                <th class="p-3">Atención</th>
+                <th class="p-3">Fecha Pedido</th>
+                <th class="p-3">Fecha Llegada</th>
+                <th class="p-3">Proveedor</th>
+                <th class="p-3">Folio</th>
+                <th class="p-3">Responsable</th>
+                <th class="p-3">Estado</th>
+                <th class="p-3">Ticket</th>
+                <th class="p-3">Comentario</th>
+                <th class="p-3 text-right">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="pedidosBody" class="divide-y divide-slate-700/60 bg-slate-900/30"></tbody>
+          </table>
+          <div id="emptyPedidos" class="text-center text-slate-400 py-8 text-xs font-medium">No hay pedidos especiales registrados.</div>
+        </div>
+        <div class="flex items-center justify-between pt-3 px-1 text-xs text-slate-400">
+          <span id="pedidosPageInfo">Página 1 de 1</span>
+          <div class="flex gap-1.5">
+            <button id="prevPedidos" class="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-900 disabled:opacity-30 hover:bg-slate-700 transition">Anterior</button>
+            <button id="nextPedidos" class="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-900 disabled:opacity-30 hover:bg-slate-700 transition">Siguiente</button>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
   <script src="app.js"></script>

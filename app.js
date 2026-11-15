@@ -1,16 +1,10 @@
 (() => {
   const $ = id => document.getElementById(id);
-  const KEYS = { 
-    user: 'partflow_user_v1', 
-    session: 'partflow_session_v1', 
-    records: 'partflow_records_v1' 
-  };
-
+  const KEYS = { user: 'partflow_user_v1', session: 'partflow_session_v1', records: 'partflow_records_v1' };
   const getUser = () => { try { return JSON.parse(localStorage.getItem(KEYS.user)); } catch { return null; } };
   const isSessionActive = localStorage.getItem(KEYS.session) === 'true';
   const user = getUser();
 
-  // === PROTECCIÓN DE RUTAS (REDIRECCIÓN A ACCESO DENEGADO) ===
   const path = window.location.pathname;
   const isLoginPage = Boolean($('authView'));
   const isDeniedPage = path.endsWith('acceso-denegado.html') || path.includes('acceso-denegado');
@@ -19,36 +13,52 @@
     window.location.replace('acceso-denegado.html');
     return;
   }
-  // ==========================================================
 
   let records = [];
   const PAGE_SIZE = 10;
   let cotizPage = 1, pedidosPage = 1, mlPage = 1;
   let weeklyChartInstance = null;
+  let tablePagesState = {};
 
   const getLocalDateString = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const todayStr = getLocalDateString(new Date());
 
   const getRecords = () => { try { const x = JSON.parse(localStorage.getItem(KEYS.records) || '[]'); return Array.isArray(x) ? x : []; } catch { return []; } };
   const saveRecords = () => localStorage.setItem(KEYS.records, JSON.stringify(records));
-
   records = getRecords();
 
-  // Sidebar collapse state (collapsed by default)
   const sidebar = $('sidebar'), overlay = $('sidebarOverlay');
-  let isCollapsed = true;
+  let isCollapsed = true; // INICIA COLAPSADO POR DEFECTO
+
+  // Cerrar modales con ESC y menús desplegables al hacer clic fuera
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      const cotizModal = $('cotizModal');
+      if (cotizModal && !cotizModal.classList.contains('hidden')) {
+        cotizModal.classList.add('hidden');
+        if (typeof resetCotizForm === 'function') resetCotizForm();
+      }
+      const pedidoModal = $('pedidoModal');
+      if (pedidoModal && !pedidoModal.classList.contains('hidden')) {
+        pedidoModal.classList.add('hidden');
+        if (typeof resetPedidoForm === 'function') resetPedidoForm();
+      }
+    }
+  });
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.dropdown-container')) {
+      document.querySelectorAll('.action-menu').forEach(m => m.classList.add('hidden'));
+    }
+  });
 
   if ($('collapseBtn')) {
     $('collapseBtn').onclick = () => {
       isCollapsed = !isCollapsed;
       if (window.innerWidth >= 1024) {
-        if (isCollapsed) {
-          sidebar.classList.remove('w-64'); sidebar.classList.add('w-20');
-          document.querySelectorAll('.sidebar-text').forEach(el => el.classList.add('hidden'));
-        } else {
-          sidebar.classList.remove('w-20'); sidebar.classList.add('w-64');
-          document.querySelectorAll('.sidebar-text').forEach(el => el.classList.remove('hidden'));
-        }
+        sidebar.classList.toggle('w-64', !isCollapsed);
+        sidebar.classList.toggle('w-20', isCollapsed);
+        document.querySelectorAll('.sidebar-text').forEach(el => el.classList.toggle('hidden', isCollapsed));
       } else {
         sidebar.classList.toggle('-translate-x-full');
         if (overlay) overlay.classList.toggle('hidden');
@@ -56,21 +66,14 @@
     };
   }
 
-  if ($('mobileToggle')) {
-    $('mobileToggle').onclick = () => { sidebar.classList.remove('-translate-x-full'); if (overlay) overlay.classList.remove('hidden'); };
-  }
-  if (overlay) {
-    overlay.onclick = () => { sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden'); };
-  }
+  if ($('mobileToggle')) $('mobileToggle').onclick = () => { sidebar.classList.remove('-translate-x-full'); if (overlay) overlay.classList.remove('hidden'); };
+  if (overlay) overlay.onclick = () => { sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden'); };
 
-  // Auth logic & persistent session control
   if ($('authView')) {
     if (!user || !isSessionActive) {
       $('authView').classList.remove('hidden');
       if ($('appView')) $('appView').classList.add('hidden');
-      if (user && $('loginUser')) {
-        $('loginUser').value = user.username;
-      }
+      if (user && $('loginUser')) $('loginUser').value = user.username;
     } else {
       $('authView').classList.add('hidden');
       if ($('appView')) $('appView').classList.remove('hidden');
@@ -86,8 +89,7 @@
       $('doRegister').addEventListener('submit', e => {
         e.preventDefault();
         if ($('newPin').value !== $('confirmPin').value) { $('registerError').textContent = 'Las contraseñas no coinciden.'; return; }
-        const newUserObj = { username: $('newUser').value.trim(), pin: $('newPin').value };
-        localStorage.setItem(KEYS.user, JSON.stringify(newUserObj));
+        localStorage.setItem(KEYS.user, JSON.stringify({ username: $('newUser').value.trim(), pin: $('newPin').value }));
         localStorage.setItem(KEYS.session, 'true');
         location.reload();
       });
@@ -112,16 +114,25 @@
   }
 
   if ($('logout')) {
-    $('logout').onclick = () => {
-      localStorage.removeItem(KEYS.session);
-      window.location.replace('index.html');
-    };
+    $('logout').onclick = () => { localStorage.removeItem(KEYS.session); window.location.replace('index.html'); };
   }
 
-  // --- MÓDULO 1: COTIZACIONES ---
+  // --- COTIZACIONES ---
+  let editingCotizId = null;
+  let opDatePickerCotiz = null;
+
   if ($('cotizForm')) {
-    const opDatePicker = flatpickr("#operationDate", { locale: "es", defaultDate: todayStr, dateFormat: "Y-m-d" });
-    opDatePicker.setDate(todayStr, true);
+    opDatePickerCotiz = flatpickr("#operationDate", { locale: "es", defaultDate: todayStr, dateFormat: "Y-m-d" });
+    opDatePickerCotiz.setDate(todayStr, true);
+
+    const cotizModal = $('cotizModal');
+    const openCotizBtn = $('openModalBtn');
+    const closeCotizBtn = $('closeModalBtn');
+    const cancelCotizBtn = $('cancelCotizBtn');
+
+    if (openCotizBtn) openCotizBtn.onclick = () => { resetCotizForm(); if (cotizModal) cotizModal.classList.remove('hidden'); };
+    if (closeCotizBtn) closeCotizBtn.onclick = () => { resetCotizForm(); if (cotizModal) cotizModal.classList.add('hidden'); };
+    if (cancelCotizBtn) cancelCotizBtn.onclick = () => { resetCotizForm(); if (cotizModal) cotizModal.classList.add('hidden'); };
 
     $('cotizForm').addEventListener('submit', e => {
       e.preventDefault();
@@ -132,19 +143,18 @@
 
       if (!Number.isFinite(minutes) || minutes <= 0) { $('entryError').textContent = 'Ingresa un tiempo válido.'; return; }
 
-      const newRecord = {
-        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-        type: 'Cotización',
-        key,
-        entity,
-        minutes,
-        date: opDate
-      };
+      const payload = { type: 'Cotización', key, entity, minutes, date: opDate };
 
-      records.unshift(newRecord);
-      saveRecords();
-      $('key').value = ''; $('entity').value = ''; $('minutes').value = ''; $('entryError').textContent = '';
-      opDatePicker.setDate(todayStr, true);
+      if (editingCotizId) {
+        const target = records.find(item => item.id === editingCotizId);
+        if (target) { Object.assign(target, payload); saveRecords(); }
+      } else {
+        records.unshift({ id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), ...payload });
+        saveRecords();
+      }
+
+      resetCotizForm();
+      if (cotizModal) cotizModal.classList.add('hidden');
       cotizPage = 1;
       renderCotizaciones();
     });
@@ -155,12 +165,22 @@
     renderCotizaciones();
   }
 
+  function resetCotizForm() {
+    editingCotizId = null;
+    if ($('key')) $('key').value = '';
+    if ($('entity')) $('entity').value = '';
+    if ($('minutes')) $('minutes').value = '';
+    if ($('entryError')) $('entryError').textContent = '';
+    if (opDatePickerCotiz) opDatePickerCotiz.setDate(todayStr, true);
+    if ($('cotizSubmitBtn')) $('cotizSubmitBtn').textContent = 'Guardar Cotización';
+    if ($('cotizModalTitle')) $('cotizModalTitle').innerHTML = '<i class="fa-solid fa-file-invoice-dollar text-emerald-400"></i> Nueva Cotización';
+  }
+
   function renderCotizaciones() {
-    const cotizList = records.filter(r => r.type === 'Cotización');
-    const totalPages = Math.ceil(cotizList.length / PAGE_SIZE) || 1;
+    const list = records.filter(r => r.type === 'Cotización');
+    const totalPages = Math.ceil(list.length / PAGE_SIZE) || 1;
     if (cotizPage > totalPages) cotizPage = totalPages;
-    const start = (cotizPage - 1) * PAGE_SIZE;
-    const toRender = cotizList.slice(start, start + PAGE_SIZE);
+    const toRender = list.slice((cotizPage - 1) * PAGE_SIZE, cotizPage * PAGE_SIZE);
 
     if ($('cotizPageInfo')) $('cotizPageInfo').textContent = `Página ${cotizPage} de ${totalPages}`;
     if ($('prevCotiz')) $('prevCotiz').disabled = cotizPage === 1;
@@ -169,8 +189,9 @@
     const tbody = $('cotizBody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    if ($('emptyCotiz')) $('emptyCotiz').classList.toggle('hidden', cotizList.length > 0);
+    if ($('emptyCotiz')) $('emptyCotiz').classList.toggle('hidden', list.length > 0);
 
+    const fragment = document.createDocumentFragment();
     toRender.forEach(r => {
       const tr = document.createElement('tr');
       tr.className = 'hover:bg-slate-800/40 transition-colors';
@@ -179,25 +200,54 @@
         <td class="p-3.5 font-medium text-white uppercase">${r.key}</td>
         <td class="p-3.5 text-slate-300 uppercase">${r.entity || ''}</td>
         <td class="p-3.5 text-brand-400 font-semibold">${Number(r.minutes).toFixed(1)} min</td>
+        <td class="p-3.5 text-right relative">
+          <div class="inline-block text-left dropdown-container">
+            <button type="button" class="action-toggle-btn px-2.5 py-1.5 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg transition inline-flex items-center gap-1.5">
+              Acciones <i class="fa-solid fa-chevron-down text-[9px]"></i>
+            </button>
+            <div class="action-menu hidden absolute right-0 mt-1 w-32 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 py-1 text-left">
+              <button class="edit-btn w-full px-3 py-1.5 text-xs text-sky-400 hover:bg-slate-800 transition flex items-center gap-2"><i class="fa-solid fa-pen w-3.5"></i> Editar</button>
+              <button class="del-btn w-full px-3 py-1.5 text-xs text-rose-400 hover:bg-slate-800 transition flex items-center gap-2"><i class="fa-solid fa-trash w-3.5"></i> Eliminar</button>
+            </div>
+          </div>
+        </td>
       `;
-      const tdAction = document.createElement('td'); tdAction.className = 'p-3.5 text-right';
-      const del = document.createElement('button');
-      del.className = 'px-2.5 py-1 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 border border-rose-500/30 rounded-lg transition';
-      del.textContent = 'Eliminar';
-      del.onclick = () => {
+
+      const toggleBtn = tr.querySelector('.action-toggle-btn');
+      const menu = tr.querySelector('.action-menu');
+      toggleBtn.onclick = (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.action-menu').forEach(m => { if (m !== menu) m.classList.add('hidden'); });
+        menu.classList.toggle('hidden');
+      };
+
+      tr.querySelector('.edit-btn').onclick = () => {
+        menu.classList.add('hidden');
+        $('key').value = r.key || '';
+        $('entity').value = r.entity || '';
+        $('minutes').value = r.minutes || '';
+        if (opDatePickerCotiz) opDatePickerCotiz.setDate(r.date || todayStr, true);
+        editingCotizId = r.id;
+        if ($('cotizSubmitBtn')) $('cotizSubmitBtn').textContent = 'Actualizar Cotización';
+        if ($('cotizModalTitle')) $('cotizModalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square text-sky-400"></i> Editar Cotización';
+        if ($('cotizModal')) $('cotizModal').classList.remove('hidden');
+      };
+
+      tr.querySelector('.del-btn').onclick = () => {
+        menu.classList.add('hidden');
         if (confirm('¿Eliminar esta cotización?')) {
           records = records.filter(x => x.id !== r.id);
           saveRecords();
           renderCotizaciones();
         }
       };
-      tdAction.appendChild(del);
-      tr.appendChild(tdAction);
-      tbody.appendChild(tr);
+
+      fragment.appendChild(tr);
     });
+    tbody.appendChild(fragment);
   }
 
-  // --- MÓDULO 2: PEDIDOS ESPECIALES (CON EDICIÓN Y ESTADOS INTERACTIVOS) ---
+  // --- PEDIDOS ESPECIALES ---
   let editingPedidoId = null;
   let opDatePickerPedido = null, arrivalDatePicker = null;
 
@@ -207,98 +257,152 @@
     arrivalDatePicker = flatpickr("#arrivalDate", { locale: "es", defaultDate: todayStr, dateFormat: "Y-m-d" });
     arrivalDatePicker.setDate(todayStr, true);
 
+    const modal = $('pedidoModal');
+    const openBtn = $('openModalBtn');
+    const closeBtn = $('closeModalBtn');
+    const cancelBtn = $('cancelEditBtn');
+
+    if (openBtn) openBtn.onclick = () => { resetPedidoForm(); if (modal) modal.classList.remove('hidden'); };
+    if (closeBtn) closeBtn.onclick = () => { if (modal) modal.classList.add('hidden'); };
+    if (cancelBtn) cancelBtn.onclick = () => { resetPedidoForm(); if (modal) modal.classList.add('hidden'); };
+
     $('pedidoForm').addEventListener('submit', e => {
       e.preventDefault();
-      const key = $('key').value.trim().toUpperCase();
-      const description = $('description').value.trim().toUpperCase();
-      const branch = $('branch').value.trim().toUpperCase();
-      const attention = $('attention').value.trim().toUpperCase();
-      const opDate = $('operationDate').value || todayStr;
-      const arrivalDate = $('arrivalDate').value;
-      const supplier = $('supplier').value.trim().toUpperCase();
-      const folio = $('folio').value.trim().toUpperCase();
-      const responsible = $('responsible').value.trim().toUpperCase();
-      const status = $('status').value.trim().toUpperCase();
-      const ticket = $('ticket').value.trim().toUpperCase();
-      const comment = $('comment').value.trim().toUpperCase();
+      const payload = {
+        key: $('key').value.trim().toUpperCase(),
+        description: $('description').value.trim().toUpperCase(),
+        branch: $('branch').value.trim().toUpperCase(),
+        attention: $('attention').value.trim().toUpperCase(),
+        date: $('operationDate').value || todayStr,
+        arrivalDate: $('arrivalDate').value,
+        supplier: $('supplier').value.trim().toUpperCase(),
+        folio: $('folio').value.trim().toUpperCase(),
+        responsible: $('responsible').value.trim().toUpperCase(),
+        status: $('status').value.trim().toUpperCase(),
+        ticket: $('ticket').value.trim().toUpperCase(),
+        comment: $('comment').value.trim().toUpperCase()
+      };
 
       if (editingPedidoId) {
         const target = records.find(item => item.id === editingPedidoId);
-        if (target) {
-          target.key = key;
-          target.description = description;
-          target.branch = branch;
-          target.attention = attention;
-          target.date = opDate;
-          target.arrivalDate = arrivalDate;
-          target.supplier = supplier;
-          target.folio = folio;
-          target.responsible = responsible;
-          target.status = status;
-          target.ticket = ticket;
-          target.comment = comment;
-          saveRecords();
-        }
-        resetPedidoForm();
-        alert('¡Pedido actualizado correctamente!');
+        if (target) { Object.assign(target, payload); saveRecords(); }
       } else {
-        const newRecord = {
-          id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-          type: 'Pedido especial',
-          key,
-          description,
-          branch,
-          attention,
-          date: opDate,
-          arrivalDate,
-          supplier,
-          folio,
-          responsible,
-          status,
-          ticket,
-          comment
-        };
-
-        records.unshift(newRecord);
+        records.unshift({ id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), type: 'Pedido especial', ...payload });
         saveRecords();
-        resetPedidoForm();
       }
-
+      resetPedidoForm();
+      if (modal) modal.classList.add('hidden');
       pedidosPage = 1;
       renderPedidos();
     });
 
-    if ($('cancelEditBtn')) {
-      $('cancelEditBtn').onclick = () => {
-        resetPedidoForm();
-      };
-    }
-
     if ($('prevPedidos')) $('prevPedidos').onclick = () => { if (pedidosPage > 1) { pedidosPage--; renderPedidos(); } };
     if ($('nextPedidos')) $('nextPedidos').onclick = () => { pedidosPage++; renderPedidos(); };
+    
+    if ($('downloadPedidoImg')) {
+      $('downloadPedidoImg').onclick = async () => {
+        const allPedidos = records.filter(r => r.type === 'Pedido especial');
+        if (allPedidos.length === 0) { alert('No hay pedidos especiales para capturar.'); return; }
+
+        const tempContainer = document.createElement('div');
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.left = '-9999px';
+        tempContainer.style.top = '-9999px';
+        tempContainer.style.width = '1250px';
+        tempContainer.style.backgroundColor = '#0f172a';
+        tempContainer.style.padding = '32px';
+        tempContainer.style.borderRadius = '16px';
+        tempContainer.style.color = '#f8fafc';
+        tempContainer.style.fontFamily = 'sans-serif';
+
+        let html = `
+          <div style="margin-bottom: 20px;">
+            <h2 style="font-size: 20px; font-weight: bold; margin: 0 0 4px 0;">Historial Completo de Pedidos Especiales - Autopartes Toro</h2>
+            <p style="font-size: 12px; color: #94a3b8; margin: 0;">Total de registros: ${allPedidos.length} | Fecha de generación: ${todayStr}</p>
+          </div>
+          <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left;">
+            <thead>
+              <tr style="background-color: #1e293b; color: #94a3b8; border-bottom: 1px solid #334155; text-transform: uppercase;">
+                <th style="padding: 10px;">Clave</th>
+                <th style="padding: 10px;">Descripción</th>
+                <th style="padding: 10px;">Sucursal</th>
+                <th style="padding: 10px;">Atención</th>
+                <th style="padding: 10px;">Fecha Pedido</th>
+                <th style="padding: 10px;">Fecha Llegada</th>
+                <th style="padding: 10px;">Proveedor</th>
+                <th style="padding: 10px;">Folio</th>
+                <th style="padding: 10px;">Responsable</th>
+                <th style="padding: 10px;">Estado</th>
+                <th style="padding: 10px;">Ticket</th>
+                <th style="padding: 10px;">Comentario</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        allPedidos.forEach((r, idx) => {
+          const st = (r.status || 'PENDIENTE').toUpperCase();
+          let badgeBg = '#1e293b', badgeColor = '#cbd5e1';
+          if (st.includes('PENDIENTE')) { badgeBg = 'rgba(245, 158, 11, 0.15)'; badgeColor = '#fbbf24'; }
+          else if (st.includes('COMPLETADO')) { badgeBg = 'rgba(16, 185, 129, 0.15)'; badgeColor = '#34d399'; }
+          else if (st.includes('DEVOLUCIÓN') || st.includes('DEVOLUCION')) { badgeBg = 'rgba(244, 63, 94, 0.15)'; badgeColor = '#fb7185'; }
+
+          html += `
+            <tr style="border-bottom: 1px solid rgba(51, 65, 85, 0.4); background-color: ${idx % 2 === 0 ? 'rgba(15, 23, 42, 0.6)' : 'transparent'};">
+              <td style="padding: 10px; font-weight: bold; text-transform: uppercase;">${r.key || ''}</td>
+              <td style="padding: 10px; text-transform: uppercase; color: #cbd5e1;">${r.description || ''}</td>
+              <td style="padding: 10px; text-transform: uppercase; color: #cbd5e1;">${r.branch || ''}</td>
+              <td style="padding: 10px; text-transform: uppercase; color: #cbd5e1;">${r.attention || ''}</td>
+              <td style="padding: 10px; color: #cbd5e1;">${r.date || todayStr}</td>
+              <td style="padding: 10px; color: #34d399; font-weight: 500;">${r.arrivalDate || ''}</td>
+              <td style="padding: 10px; text-transform: uppercase; color: #cbd5e1;">${r.supplier || ''}</td>
+              <td style="padding: 10px; text-transform: uppercase; color: #cbd5e1;">${r.folio || ''}</td>
+              <td style="padding: 10px; text-transform: uppercase; color: #cbd5e1;">${r.responsible || ''}</td>
+              <td style="padding: 10px; text-transform: uppercase;"><span style="padding: 4px 8px; border-radius: 6px; background-color: ${badgeBg}; color: ${badgeColor}; font-weight: 600; font-size: 10px; display: inline-block;">${st}</span></td>
+              <td style="padding: 10px; text-transform: uppercase; color: #cbd5e1;">${r.ticket || ''}</td>
+              <td style="padding: 10px; text-transform: uppercase; color: #cbd5e1;">${r.comment || ''}</td>
+            </tr>
+          `;
+        });
+
+        html += `</tbody></table>`;
+        tempContainer.innerHTML = html;
+        document.body.appendChild(tempContainer);
+
+        try {
+          const canvas = await html2canvas(tempContainer, { backgroundColor: '#0f172a', scale: 2 });
+          const a = document.createElement('a');
+          a.href = canvas.toDataURL('image/png');
+          a.download = 'pedidos-especiales-reporte-completo.png';
+          a.click();
+        } catch (err) {
+          console.error(err);
+          alert('Error al generar la imagen.');
+        } finally {
+          document.body.removeChild(tempContainer);
+        }
+      };
+    }
 
     renderPedidos();
   }
 
   function resetPedidoForm() {
     editingPedidoId = null;
-    ['key', 'description', 'branch', 'attention', 'supplier', 'folio', 'responsible', 'ticket', 'comment'].forEach(id => {
-      if ($(id)) $(id).value = '';
-    });
+    ['key', 'description', 'branch', 'attention', 'supplier', 'folio', 'responsible', 'ticket', 'comment'].forEach(id => { if ($(id)) $(id).value = ''; });
     if ($('status')) $('status').value = 'PENDIENTE';
     if (opDatePickerPedido) opDatePickerPedido.setDate(todayStr, true);
     if (arrivalDatePicker) arrivalDatePicker.setDate(todayStr, true);
     if ($('pedidoSubmitBtn')) $('pedidoSubmitBtn').textContent = 'Guardar Pedido';
-    if ($('cancelEditBtn')) $('cancelEditBtn').classList.add('hidden');
+    if ($('modalTitle')) $('modalTitle').innerHTML = '<i class="fa-solid fa-boxes-packing text-emerald-400"></i> Gestión de Pedido Especial';
     if ($('entryError')) $('entryError').textContent = '';
   }
 
-    function renderPedidos() {
-    const pedidosList = records.filter(r => r.type === 'Pedido especial');
-    const totalPages = Math.ceil(pedidosList.length / PAGE_SIZE) || 1;
+  function renderPedidos() {
+    const list = records.filter(r => r.type === 'Pedido especial');
+    const totalPages = Math.ceil(list.length / PAGE_SIZE) || 1;
     if (pedidosPage > totalPages) pedidosPage = totalPages;
-    const start = (pedidosPage - 1) * PAGE_SIZE;
-    const toRender = pedidosList.slice(start, start + PAGE_SIZE);
+    const toRender = list.slice((pedidosPage - 1) * PAGE_SIZE, pedidosPage * PAGE_SIZE);
 
     if ($('pedidosPageInfo')) $('pedidosPageInfo').textContent = `Página ${pedidosPage} de ${totalPages}`;
     if ($('prevPedidos')) $('prevPedidos').disabled = pedidosPage === 1;
@@ -307,22 +411,18 @@
     const tbody = $('pedidosBody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    if ($('emptyPedidos')) $('emptyPedidos').classList.toggle('hidden', pedidosList.length > 0);
+    if ($('emptyPedidos')) $('emptyPedidos').classList.toggle('hidden', list.length > 0);
 
+    const fragment = document.createDocumentFragment();
     toRender.forEach(r => {
       const tr = document.createElement('tr');
       tr.className = 'hover:bg-slate-800/40 transition-colors';
 
-      // Definir color de la etiqueta según el estado guardado
       const st = (r.status || 'PENDIENTE').toUpperCase();
       let statusBadgeClass = 'bg-slate-800 text-slate-300 border-slate-700';
-      if (st.includes('PENDIENTE')) {
-        statusBadgeClass = 'bg-amber-500/10 text-amber-400 border-amber-500/30';
-      } else if (st.includes('COMPLETADO')) {
-        statusBadgeClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
-      } else if (st.includes('DEVOLUCIÓN') || st.includes('DEVOLUCION')) {
-        statusBadgeClass = 'bg-rose-500/10 text-rose-400 border-rose-500/30';
-      }
+      if (st.includes('PENDIENTE')) statusBadgeClass = 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+      else if (st.includes('COMPLETADO')) statusBadgeClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+      else if (st.includes('DEVOLUCIÓN') || st.includes('DEVOLUCION')) statusBadgeClass = 'bg-rose-500/10 text-rose-400 border-rose-500/30';
 
       tr.innerHTML = `
         <td class="p-3 font-medium text-white uppercase">${r.key || ''}</td>
@@ -337,16 +437,51 @@
         <td class="p-3 uppercase"><span class="px-2.5 py-1 rounded-lg border text-[11px] font-semibold inline-block ${statusBadgeClass}">${st}</span></td>
         <td class="p-3 text-slate-300 uppercase">${r.ticket || ''}</td>
         <td class="p-3 text-slate-300 uppercase">${r.comment || ''}</td>
+        <td class="p-3 text-right relative">
+          <div class="inline-block text-left dropdown-container">
+            <button type="button" class="action-toggle-btn px-2.5 py-1.5 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg transition inline-flex items-center gap-1.5">
+              Acciones <i class="fa-solid fa-chevron-down text-[9px]"></i>
+            </button>
+            <div class="action-menu hidden absolute right-0 mt-1 w-32 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 py-1 text-left">
+              <button class="dup-btn w-full px-3 py-1.5 text-xs text-emerald-400 hover:bg-slate-800 transition flex items-center gap-2"><i class="fa-solid fa-clone w-3.5"></i> Duplicar</button>
+              <button class="edit-btn w-full px-3 py-1.5 text-xs text-sky-400 hover:bg-slate-800 transition flex items-center gap-2"><i class="fa-solid fa-pen w-3.5"></i> Editar</button>
+              <button class="del-btn w-full px-3 py-1.5 text-xs text-rose-400 hover:bg-slate-800 transition flex items-center gap-2"><i class="fa-solid fa-trash w-3.5"></i> Eliminar</button>
+            </div>
+          </div>
+        </td>
       `;
 
-      // Columna de Acciones (Editar y Eliminar)
-      const tdAction = document.createElement('td'); 
-      tdAction.className = 'p-3 text-right whitespace-nowrap';
+      const toggleBtn = tr.querySelector('.action-toggle-btn');
+      const menu = tr.querySelector('.action-menu');
+      toggleBtn.onclick = (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.action-menu').forEach(m => { if (m !== menu) m.classList.add('hidden'); });
+        menu.classList.toggle('hidden');
+      };
 
-      const editBtn = document.createElement('button');
-      editBtn.className = 'px-2.5 py-1 text-xs font-semibold text-sky-400 hover:bg-sky-500/10 border border-sky-500/30 rounded-lg transition mr-1.5';
-      editBtn.textContent = 'Editar';
-      editBtn.onclick = () => {
+      tr.querySelector('.dup-btn').onclick = () => {
+        menu.classList.add('hidden');
+        $('key').value = '';
+        $('description').value = '';
+        $('branch').value = r.branch || '';
+        $('attention').value = r.attention || '';
+        if (opDatePickerPedido) opDatePickerPedido.setDate(r.date || todayStr, true);
+        if (arrivalDatePicker) arrivalDatePicker.setDate(r.arrivalDate || todayStr, true);
+        $('supplier').value = r.supplier || '';
+        $('folio').value = r.folio || '';
+        $('responsible').value = r.responsible || '';
+        $('status').value = r.status || 'PENDIENTE';
+        $('ticket').value = r.ticket || '';
+        $('comment').value = r.comment || '';
+
+        editingPedidoId = null;
+        if ($('pedidoSubmitBtn')) $('pedidoSubmitBtn').textContent = 'Guardar Pedido';
+        if ($('modalTitle')) $('modalTitle').innerHTML = '<i class="fa-solid fa-clone text-emerald-400"></i> Nuevo Pedido (Duplicado)';
+        if ($('pedidoModal')) $('pedidoModal').classList.remove('hidden');
+      };
+
+      tr.querySelector('.edit-btn').onclick = () => {
+        menu.classList.add('hidden');
         $('key').value = r.key || '';
         $('description').value = r.description || '';
         $('branch').value = r.branch || '';
@@ -359,18 +494,14 @@
         $('status').value = r.status || 'PENDIENTE';
         $('ticket').value = r.ticket || '';
         $('comment').value = r.comment || '';
-
         editingPedidoId = r.id;
         if ($('pedidoSubmitBtn')) $('pedidoSubmitBtn').textContent = 'Actualizar Pedido';
-        if ($('cancelEditBtn')) $('cancelEditBtn').classList.remove('hidden');
-
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if ($('modalTitle')) $('modalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square text-sky-400"></i> Editar Pedido Especial';
+        if ($('pedidoModal')) $('pedidoModal').classList.remove('hidden');
       };
 
-      const delBtn = document.createElement('button');
-      delBtn.className = 'px-2.5 py-1 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 border border-rose-500/30 rounded-lg transition';
-      delBtn.textContent = 'Eliminar';
-      delBtn.onclick = () => {
+      tr.querySelector('.del-btn').onclick = () => {
+        menu.classList.add('hidden');
         if (confirm('¿Eliminar pedido?')) {
           records = records.filter(x => x.id !== r.id);
           saveRecords();
@@ -378,26 +509,23 @@
         }
       };
 
-      tdAction.appendChild(editBtn);
-      tdAction.appendChild(delBtn);
-      tr.appendChild(tdAction); 
-      
-      tbody.appendChild(tr);
+      fragment.appendChild(tr);
     });
+    tbody.appendChild(fragment);
   }
 
+  // --- MERCADO LIBRE ---
   if ($('mlForm')) {
     $('mlForm').addEventListener('submit', e => {
       e.preventDefault();
-      const mlLink = $('mlUrlInput').value.trim();
-      const newRecord = {
-        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-        type: 'Pedido Mercado Libre',
-        date: todayStr,
-        mlLink
-      };
+      const rawUrl = $('mlUrlInput').value.trim();
 
-      records.unshift(newRecord);
+      records.unshift({ 
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), 
+        type: 'Pedido Mercado Libre', 
+        date: todayStr, 
+        mlLink: rawUrl 
+      });
       saveRecords();
       $('mlUrlInput').value = '';
       mlPage = 1;
@@ -406,16 +534,14 @@
 
     if ($('prevMl')) $('prevMl').onclick = () => { if (mlPage > 1) { mlPage--; renderMl(); } };
     if ($('nextMl')) $('nextMl').onclick = () => { mlPage++; renderMl(); };
-
     renderMl();
   }
 
   function renderMl() {
-    const mlList = records.filter(r => r.type === 'Pedido Mercado Libre');
-    const totalPages = Math.ceil(mlList.length / PAGE_SIZE) || 1;
+    const list = records.filter(r => r.type === 'Pedido Mercado Libre');
+    const totalPages = Math.ceil(list.length / PAGE_SIZE) || 1;
     if (mlPage > totalPages) mlPage = totalPages;
-    const start = (mlPage - 1) * PAGE_SIZE;
-    const toRender = mlList.slice(start, start + PAGE_SIZE);
+    const toRender = list.slice((mlPage - 1) * PAGE_SIZE, mlPage * PAGE_SIZE);
 
     if ($('mlViewPageInfo')) $('mlViewPageInfo').textContent = `Página ${mlPage} de ${totalPages}`;
     if ($('prevMl')) $('prevMl').disabled = mlPage === 1;
@@ -424,46 +550,42 @@
     const tbody = $('mlTableBody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    if ($('emptyMlView')) $('emptyMlView').classList.toggle('hidden', mlList.length > 0);
+    if ($('emptyMlView')) $('emptyMlView').classList.toggle('hidden', list.length > 0);
 
+    const fragment = document.createDocumentFragment();
     toRender.forEach(r => {
       const tr = document.createElement('tr');
       tr.className = 'hover:bg-slate-800/40 transition-colors';
-      tr.innerHTML = `<td class="p-3.5 text-slate-300">${r.date || todayStr}</td><td class="p-3.5"><a href="${r.mlLink}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-500/10 border border-sky-500/30 text-sky-400 hover:bg-sky-500/20 font-semibold transition">🔗 Abrir enlace</a></td>`;
+      tr.innerHTML = `
+        <td class="p-3.5 text-slate-300">${r.date || todayStr}</td>
+        <td class="p-3.5"><a href="${r.mlLink}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-500/10 border border-sky-500/30 text-sky-400 hover:bg-sky-500/20 font-semibold transition">🔗 Abrir enlace</a></td>
+        <td class="p-3.5 text-right"><button class="del-btn px-2.5 py-1 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 border border-rose-500/30 rounded-lg transition">Eliminar</button></td>
+      `;
 
-      const tdAction = document.createElement('td'); tdAction.className = 'p-3.5 text-right';
-      const del = document.createElement('button');
-      del.className = 'px-2.5 py-1 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 border border-rose-500/30 rounded-lg transition';
-      del.textContent = 'Eliminar';
-      del.onclick = () => {
+      tr.querySelector('.del-btn').onclick = () => {
         if (confirm('¿Eliminar enlace?')) {
           records = records.filter(x => x.id !== r.id);
           saveRecords();
           renderMl();
         }
       };
-      tdAction.appendChild(del); tr.appendChild(tdAction); tbody.appendChild(tr);
+      fragment.appendChild(tr);
     });
+    tbody.appendChild(fragment);
   }
 
-  // --- MÓDULO 4: DASHBOARD & REPORTE ESTADÍSTICO ---
+  // --- DASHBOARD & ANALYTICS ---
   function initDashboard() {
     const cotizList = records.filter(r => r.type === 'Cotización');
-
     const firstDayMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`;
-    const defaultStart = firstDayMonth;
-    const defaultEnd = todayStr;
-
-    updateDashboardMetrics(cotizList, defaultStart, defaultEnd);
+    updateDashboardMetrics(cotizList, firstDayMonth, todayStr);
 
     flatpickr("#reportRangeSelector", {
-      mode: "range", locale: "es", dateFormat: "Y-m-d", defaultDate: [defaultStart, defaultEnd],
-      onChange: function(selectedDates, dateStr, instance) {
+      mode: "range", locale: "es", dateFormat: "Y-m-d", defaultDate: [firstDayMonth, todayStr],
+      onChange: (selectedDates, dateStr, instance) => {
         if (selectedDates.length === 2) {
-          const start = instance.formatDate(selectedDates[0], "Y-m-d");
-          const end = instance.formatDate(selectedDates[1], "Y-m-d");
-          updateDashboardMetrics(cotizList, start, end);
-          $('weeklyRangeTitle').textContent = `Rango personalizado (${start} al ${end})`;
+          tablePagesState = {};
+          updateDashboardMetrics(cotizList, instance.formatDate(selectedDates[0], "Y-m-d"), instance.formatDate(selectedDates[1], "Y-m-d"));
         }
       }
     });
@@ -473,7 +595,6 @@
         const cotiz = records.filter(r => r.type === 'Cotización');
         const pedidos = records.filter(r => r.type === 'Pedido especial');
         const ml = records.filter(r => r.type === 'Pedido Mercado Libre');
-
         if (cotiz.length) downloadJson(cotiz, 'cotizaciones.json');
         if (pedidos.length) downloadJson(pedidos, 'pedidos-especiales.json');
         if (ml.length) downloadJson(ml, 'mercado-libre.json');
@@ -491,12 +612,9 @@
             const json = JSON.parse(await f.text());
             const incoming = Array.isArray(json) ? json : (json.records || []);
             incoming.forEach(inc => {
-              const existingIndex = all.findIndex(r => r.id === inc.id);
-              if (existingIndex !== -1) {
-                all[existingIndex] = { ...all[existingIndex], ...inc };
-              } else {
-                all.push(inc);
-              }
+              const idx = all.findIndex(r => r.id === inc.id);
+              if (idx !== -1) all[idx] = { ...all[idx], ...inc };
+              else all.push(inc);
             });
           } catch (err) { console.error(err); }
         }
@@ -507,28 +625,14 @@
     if ($('purgeBtn')) {
       $('purgeBtn').onclick = () => {
         if (confirm('¿Estás seguro de eliminar todos los registros guardados?')) {
-          records = [];
-          saveRecords();
-          alert('¡Se han borrado todos los registros exitosamente!');
-          location.reload();
+          records = []; saveRecords(); alert('¡Se han borrado todos los registros exitosamente!'); location.reload();
         }
-      };
-    }
-
-    if ($('downloadReportImg')) {
-      $('downloadReportImg').onclick = async () => {
-        const canvas = await html2canvas($('weeklyReportCapture'), { backgroundColor: '#0f172a', scale: 2 });
-        const a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = 'reporte-estadistico.png'; a.click();
       };
     }
   }
 
   function updateDashboardMetrics(cotizList, startDate, endDate) {
-    const periodCotiz = cotizList.filter(r => {
-      const d = r.date || todayStr;
-      return d >= startDate && d <= endDate;
-    });
-
+    const periodCotiz = cotizList.filter(r => (r.date || todayStr) >= startDate && (r.date || todayStr) <= endDate);
     const N = periodCotiz.length;
     const suma = periodCotiz.reduce((acc, r) => acc + Number(r.minutes), 0);
     const promedio = N > 0 ? suma / N : 0;
@@ -540,23 +644,16 @@
     if ($('statMean')) $('statMean').textContent = promedio.toFixed(2) + ' min';
     if ($('statVariance')) $('statVariance').textContent = varianza.toFixed(2);
     if ($('statStdDev')) $('statStdDev').textContent = desvStd.toFixed(2);
-
-    if ($('weeklyRangeTitle')) {
-      $('weeklyRangeTitle').textContent = `Mes en curso (${startDate} al ${endDate})`;
-    }
+    if ($('weeklyRangeTitle')) $('weeklyRangeTitle').textContent = `Rango (${startDate} al ${endDate})`;
 
     const explanationBox = $('chartExplanationBox');
     if (explanationBox) {
-      const highValues = [...new Set(periodCotiz.map(r => Number(r.minutes)))]
-        .filter(m => m > (promedio + desvStd))
-        .sort((a, b) => a - b);
-      
+      const highValues = [...new Set(periodCotiz.map(r => Number(r.minutes)))].filter(m => m > (promedio + desvStd)).sort((a, b) => a - b);
       const highStr = highValues.length > 0 ? highValues.join(', ') + ' min' : 'ninguno';
-
       explanationBox.innerHTML = `
         <p>- La desviación estándar de los <strong>${N}</strong> datos es <strong>${desvStd.toFixed(2)} min</strong></p>
-        <p>- Esto indica que, en términos generales, los datos se encuentran aproximadamente a <strong>${desvStd.toFixed(2)} min</strong> de distancia de la media (<strong>${promedio.toFixed(2)} min</strong>).</p>
-        <p>- En resumen: <strong>${desvStd.toFixed(2)} min</strong> es una dispersión ${desvStd > 5 ? 'considerable' : 'moderada'} ya que varios valores están alejados del promedio: <strong>${highStr}</strong>.</p>
+        <p>- Esto indica que los datos se encuentran a <strong>${desvStd.toFixed(2)} min</strong> de distancia de la media (<strong>${promedio.toFixed(2)} min</strong>).</p>
+        <p>- En resumen: <strong>${desvStd.toFixed(2)} min</strong> es una dispersión ${desvStd > 5 ? 'considerable' : 'moderada'}, con valores alejados: <strong>${highStr}</strong>.</p>
       `;
     }
 
@@ -581,126 +678,119 @@
       groupedByDate[d].push(r);
     });
 
-    const sortedDates = Object.keys(groupedByDate).sort();
-
-    sortedDates.forEach(date => {
+    const fragment = document.createDocumentFragment();
+    Object.keys(groupedByDate).sort().forEach(date => {
       const items = groupedByDate[date];
       const daySum = items.reduce((acc, r) => acc + Number(r.minutes), 0);
       const dayMean = items.length > 0 ? daySum / items.length : 0;
+
+      const numCotiz = items.length;
+      const numPedidosEsp = records.filter(r => r.type === 'Pedido especial' && (r.date || todayStr) === date).length;
+      const percentReal = numCotiz > 0 ? Math.round((numPedidosEsp / numCotiz) * 100) : 0;
+
+      if (!tablePagesState[date]) tablePagesState[date] = 1;
+      const pageSize = 5;
+      const totalPages = Math.ceil(items.length / pageSize) || 1;
+      if (tablePagesState[date] > totalPages) tablePagesState[date] = totalPages;
+      const curr = tablePagesState[date];
+      const toRender = items.slice((curr - 1) * pageSize, curr * pageSize);
 
       const card = document.createElement('div');
       card.className = 'bg-slate-950 border border-slate-800 rounded-xl overflow-hidden p-4 space-y-3';
 
       let html = `
-        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-          <span class="text-xs font-bold uppercase text-brand-400"><i class="fa-solid fa-calendar-day mr-1.5"></i> Fecha: ${date}</span>
-          <span class="text-xs text-slate-400">Cotizaciones: <strong>${items.length}</strong> | Suma: <strong>${daySum.toFixed(1)} min</strong> | Promedio día: <strong class="text-brand-400">${dayMean.toFixed(1)} min</strong></span>
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-800 pb-3 gap-3">
+          <div>
+            <span class="text-xs font-bold uppercase text-brand-400"><i class="fa-solid fa-calendar-day mr-1.5"></i> Fecha: ${date}</span>
+            <span class="text-xs text-slate-400 ml-3">Suma: <strong>${daySum.toFixed(1)} min</strong> | Promedio: <strong class="text-brand-400">${dayMean.toFixed(1)} min</strong></span>
+          </div>
+          <div class="flex items-center bg-slate-900 border border-slate-800 rounded-lg overflow-hidden text-center text-xs">
+            <div class="px-3 py-1 border-r border-slate-800">
+              <div class="text-[9px] uppercase text-slate-400 font-bold"># Cotiz</div>
+              <div class="text-white font-bold">${numCotiz}</div>
+            </div>
+            <div class="px-3 py-1 border-r border-slate-800">
+              <div class="text-[9px] uppercase text-slate-400 font-bold">Ped Esp</div>
+              <div class="text-emerald-400 font-bold">${numPedidosEsp}</div>
+            </div>
+            <div class="px-3 py-1 bg-brand-400/10">
+              <div class="text-[9px] uppercase text-brand-400 font-bold">% Real</div>
+              <div class="text-brand-400 font-extrabold">${percentReal}%</div>
+            </div>
+          </div>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs border-collapse">
             <thead>
               <tr class="bg-slate-900 border-b border-slate-800 text-slate-400 uppercase text-[10px]">
-                <th class="p-2.5">N</th>
-                <th class="p-2.5">Clave (xi ref)</th>
-                <th class="p-2.5">Entidad</th>
-                <th class="p-2.5">Minutos (xi)</th>
-                <th class="p-2.5">Media (x̄)</th>
-                <th class="p-2.5">Desviación (xi - x̄)</th>
-                <th class="p-2.5">Cuadrático ((xi - x̄)²)</th>
+                <th class="p-2.5">N</th><th class="p-2.5">Clave (xi ref)</th><th class="p-2.5">Entidad</th><th class="p-2.5">Minutos (xi)</th><th class="p-2.5">Media (x̄)</th><th class="p-2.5">Desviación (xi - x̄)</th><th class="p-2.5">Cuadrático ((xi - x̄)²)</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800/40">
       `;
 
-      items.forEach((r, idx) => {
+      toRender.forEach((r, idx) => {
         const xi = Number(r.minutes);
         const diff = xi - globalMean;
-        const diffSq = Math.pow(diff, 2);
-        html += `
-          <tr class="hover:bg-slate-900/50 transition">
-            <td class="p-2.5 text-slate-400 font-mono">${idx + 1}</td>
-            <td class="p-2.5 text-white font-semibold uppercase">${r.key}</td>
-            <td class="p-2.5 text-slate-300 uppercase">${r.entity || ''}</td>
-            <td class="p-2.5 text-brand-400 font-bold">${xi.toFixed(1)} min</td>
-            <td class="p-2.5 text-slate-300">${globalMean.toFixed(2)}</td>
-            <td class="p-2.5 text-slate-300">${diff.toFixed(2)}</td>
-            <td class="p-2.5 text-slate-400 font-mono">${diffSq.toFixed(2)}</td>
-          </tr>
-        `;
+        html += `<tr class="hover:bg-slate-900/50 transition"><td class="p-2.5 text-slate-400 font-mono">${((curr - 1) * pageSize) + idx + 1}</td><td class="p-2.5 text-white font-semibold uppercase">${r.key}</td><td class="p-2.5 text-slate-300 uppercase">${r.entity || ''}</td><td class="p-2.5 text-brand-400 font-bold">${xi.toFixed(1)} min</td><td class="p-2.5 text-slate-300">${globalMean.toFixed(2)}</td><td class="p-2.5 text-slate-300">${diff.toFixed(2)}</td><td class="p-2.5 text-slate-400 font-mono">${Math.pow(diff, 2).toFixed(2)}</td></tr>`;
       });
 
-      html += `
-            </tbody>
-          </table>
-        </div>
-      `;
+      html += `</tbody></table></div>`;
+
+      if (items.length > pageSize) {
+        html += `
+          <div class="flex items-center justify-between pt-2 px-1 text-xs text-slate-400 border-t border-slate-800/60 mt-2">
+            <span>Página ${curr} de ${totalPages}</span>
+            <div class="flex gap-1.5">
+              <button data-date="${date}" data-action="prev" class="px-2 py-0.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 transition ${curr === 1 ? 'opacity-30 cursor-not-allowed' : ''}">Anterior</button>
+              <button data-date="${date}" data-action="next" class="px-2 py-0.5 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 transition ${curr >= totalPages ? 'opacity-30 cursor-not-allowed' : ''}">Siguiente</button>
+            </div>
+          </div>
+        `;
+      }
+
       card.innerHTML = html;
-      container.appendChild(card);
+      fragment.appendChild(card);
+    });
+
+    container.appendChild(fragment);
+
+    container.querySelectorAll('button[data-date]').forEach(btn => {
+      btn.onclick = () => {
+        const date = btn.getAttribute('data-date');
+        const action = btn.getAttribute('data-action');
+        const totalPages = Math.ceil(groupedByDate[date].length / 5) || 1;
+        if (action === 'prev' && tablePagesState[date] > 1) tablePagesState[date]--;
+        else if (action === 'next' && tablePagesState[date] < totalPages) tablePagesState[date]++;
+        renderExcelDaysTables(periodCotiz, globalMean);
+      };
     });
   }
 
   function renderReport(periodCotiz, globalMean, globalStd) {
     if (!$('weeklyChart')) return;
-
-    if (periodCotiz.length === 0) {
-      if (weeklyChartInstance) { weeklyChartInstance.destroy(); weeklyChartInstance = null; }
-      return;
-    }
+    if (periodCotiz.length === 0) { if (weeklyChartInstance) { weeklyChartInstance.destroy(); weeklyChartInstance = null; } return; }
 
     const sortedCotiz = [...periodCotiz].sort((a, b) => (a.date || todayStr).localeCompare(b.date || todayStr));
-
-    const chartLabels = sortedCotiz.map((r, idx) => `#${idx + 1} (${r.key || 'N/A'})`);
-    const chartData = sortedCotiz.map(r => Number(Number(r.minutes).toFixed(1)));
-    const meanLineData = sortedCotiz.map(() => Number(globalMean.toFixed(1)));
-
     const ctx = $('weeklyChart').getContext('2d');
     if (weeklyChartInstance) weeklyChartInstance.destroy();
+
     weeklyChartInstance = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: chartLabels,
+        labels: sortedCotiz.map((r, i) => `#${i + 1} (${r.key || 'N/A'})`),
         datasets: [
-          { 
-            label: 'Cotización Individual (xi min)', 
-            data: chartData, 
-            borderColor: '#4ce0a0', 
-            backgroundColor: '#4ce0a0', 
-            borderWidth: 2, 
-            pointRadius: 4,
-            tension: 0.1 
-          },
-          { 
-            label: 'Media Global (x̄)', 
-            data: meanLineData, 
-            borderColor: '#38bdf8', 
-            borderDash: [5, 5], 
-            borderWidth: 1.5, 
-            pointRadius: 0 
-          }
+          { label: 'Cotización Individual (xi min)', data: sortedCotiz.map(r => Number(Number(r.minutes).toFixed(1))), borderColor: '#4ce0a0', backgroundColor: '#4ce0a0', borderWidth: 2, pointRadius: 4, tension: 0.1 },
+          { label: 'Media Global (x̄)', data: sortedCotiz.map(() => Number(globalMean.toFixed(1))), borderColor: '#38bdf8', borderDash: [5, 5], borderWidth: 1.5, pointRadius: 0 }
         ]
       },
-      options: { 
-        responsive: true, 
-        maintainAspectRatio: false, 
-        plugins: { 
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
           legend: { labels: { color: '#cbd5e1' } },
-          tooltip: {
-            callbacks: {
-              title: function(context) {
-                const index = context[0].dataIndex;
-                const item = sortedCotiz[index];
-                return `Fecha: ${item.date || todayStr} | Clave: ${item.key} | Entidad: ${item.entity || 'N/A'}`;
-              },
-              afterBody: function() {
-                return `Desv. Estándar Global (s): ${globalStd.toFixed(2)} min`;
-              }
-            }
-          }
-        }, 
-        scales: { 
-          x: { ticks: { color: '#94a3b8', maxTicksLimit: 15 } }, 
-          y: { beginAtZero: true, ticks: { color: '#94a3b8' } } 
-        } 
+          tooltip: { callbacks: { title: ctx => `Fecha: ${sortedCotiz[ctx[0].dataIndex].date || todayStr} | Clave: ${sortedCotiz[ctx[0].dataIndex].key} | Entidad: ${sortedCotiz[ctx[0].dataIndex].entity || 'N/A'}`, afterBody: () => `Desv. Estándar Global (s): ${globalStd.toFixed(2)} min` } }
+        },
+        scales: { x: { ticks: { color: '#94a3b8', maxTicksLimit: 15 } }, y: { beginAtZero: true, ticks: { color: '#94a3b8' } } }
       }
     });
   }
@@ -711,36 +801,19 @@
     a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
   }
 
-  (function() {
-    const line1Text = "Autopartes, Toro";
-    const line2Text = " Dept. Cotizaciones.";
-    const typingSpeed = 100, erasingSpeed = 60, pauseTime = 2000;
-
-    function iniciarEfectoTypewriter() {
-      const elLine1 = document.getElementById('typedLine1');
-      const elLine2 = document.getElementById('typedLine2');
-      if (!elLine1 || !elLine2) return;
-
-      let i = 0, j = 0, isDeleting = false;
-      function loop() {
-        if (!isDeleting && i <= line1Text.length) {
-          elLine1.textContent = line1Text.substring(0, i); i++; setTimeout(loop, typingSpeed);
-        } else if (!isDeleting && j <= line2Text.length) {
-          elLine2.textContent = line2Text.substring(0, j); j++; setTimeout(loop, typingSpeed);
-        } else if (!isDeleting && i > line1Text.length && j > line2Text.length) {
-          isDeleting = true; setTimeout(loop, pauseTime);
-        } else if (isDeleting && j > 0) {
-          j--; elLine2.textContent = line2Text.substring(0, j); setTimeout(loop, erasingSpeed);
-        } else if (isDeleting && i > 0) {
-          i--; elLine1.textContent = line1Text.substring(0, i); setTimeout(loop, erasingSpeed);
-        } else if (isDeleting && i === 0 && j === 0) {
-          isDeleting = false; setTimeout(loop, 500);
-        }
-      }
-      loop();
-    }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciarEfectoTypewriter);
-    else iniciarEfectoTypewriter();
+  (() => {
+    const l1 = "Autopartes, Toro", l2 = " Dept. Cotizaciones.";
+    const el1 = $('typedLine1'), el2 = $('typedLine2');
+    if (!el1 || !el2) return;
+    let i = 0, j = 0, isDel = false;
+    const loop = () => {
+      if (!isDel && i <= l1.length) { el1.textContent = l1.substring(0, i++); setTimeout(loop, 100); }
+      else if (!isDel && j <= l2.length) { el2.textContent = l2.substring(0, j++); setTimeout(loop, 100); }
+      else if (!isDel) { isDel = true; setTimeout(loop, 2000); }
+      else if (j > 0) { el2.textContent = l2.substring(0, --j); setTimeout(loop, 60); }
+      else if (i > 0) { el1.textContent = l1.substring(0, --i); setTimeout(loop, 60); }
+      else { isDel = false; setTimeout(loop, 500); }
+    };
+    loop();
   })();
-    
 })();
