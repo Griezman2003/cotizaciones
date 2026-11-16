@@ -19,6 +19,7 @@
 </head>
 <body class="min-h-full flex flex-col font-sans bg-slate-900 text-slate-100 antialiased">
 
+<!--
   <div id="authView" class="hidden min-h-screen w-full flex bg-slate-950 font-sans text-slate-100 antialiased overflow-hidden">
 
     <div class="w-full lg:w-1/2 flex flex-col justify-between p-8 sm:p-12 lg:p-16 xl:p-20 z-10 bg-slate-900/90 backdrop-blur-xl border-r border-slate-800">
@@ -32,7 +33,6 @@
 
       <div class="max-w-md w-full mx-auto space-y-8 my-auto py-8">
         
-        <!-- FORMULARIO DE LOGIN -->
         <div id="loginForm" class="space-y-6">
           <div class="space-y-2">
             <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Control de Acceso</span>
@@ -130,9 +130,41 @@
     </div>
 
   </div>
+-->
+<div id="authView" class="hidden">
+  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;">
+    <div>
+
+      <div id="loginForm">
+        <h3>Acceso</h3>
+        <form id="doLogin">
+          <p style="color: black;"><input id="loginUser" placeholder="Usuario" required></p>
+          <p><input id="loginPin" type="password" placeholder="Contraseña" required></p>
+          <p><button type="submit">Entrar</button></p>
+          <p id="loginError"></p>
+        </form>
+        <p><a href="#" id="showRegister">Crear cuenta</a></p>
+      </div>
+
+      <div id="registerForm" class="hidden">
+        <h3>Registro</h3>
+        <form id="doRegister">
+          <p><input id="newUser" placeholder="Usuario" required></p>
+          <p><input id="newPin" type="password" placeholder="Contraseña" required></p>
+          <p style="color: black;"><input id="confirmPin" type="password" placeholder="Confirmar" required></p>
+          <p><button type="submit">Registrar</button></p>
+          <p id="registerError"></p>
+        </form>
+        <p><a href="#" id="showLogin">Volver</a></p>
+      </div>
+
+    </div>
+  </div>
+</div>
 
   <div id="appView" class="hidden min-h-screen w-full flex flex-col lg:flex-row relative">
-    <button id="mobileToggle" class="lg:hidden absolute top-4 left-4 z-50 p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-emerald-400"><i class="fa-solid fa-bars"></i></button>
+  <button id="mobileToggle" class="lg:hidden absolute top-4 left-4 z-50 p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-emerald-400"><i class="fa-solid fa-bars"></i></button>
+
 
     <!-- SIDEBAR -->
     <aside id="sidebar" class="w-20 bg-slate-950 border-r border-slate-800 p-4 flex flex-col justify-between shrink-0 transition-all duration-300 fixed lg:static inset-y-0 left-0 z-40 -translate-x-full lg:translate-x-0">
