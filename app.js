@@ -1150,4 +1150,186 @@
     if (resVal) resVal.textContent = resultValues[step - 1];
   }
 
+
+  // --- IMPORTADOR DE EXCEL CRUDO (SheetJS) ---
+
+  const normalizeTxt = v => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+  const upTxt = v => String(v ?? '').trim().toUpperCase();
+  const pad2 = n => String(n).padStart(2, '0');
+
+  function excelToISO(v) {
+    if (typeof v === 'number' && v > 40000 && v < 60000) {
+      const d = XLSX.SSF.parse_date_code(v);
+      if (d) return `${d.y}-${pad2(d.m)}-${pad2(d.d)}`;
+    }
+    const m = String(v ?? '').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    return m ? `${m[3]}-${pad2(m[2])}-${pad2(m[1])}` : '';
+  }
+
+  function importarCotizaciones(sheet) {
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: true });
+    let count = 0;
+    if (!rows.length) return count;
+
+    [3, 8, 13, 18, 23, 28].forEach(colClave => {
+      const colEntidad = colClave + 1;
+      const colMinutos = colClave + 2;
+
+      let blockDate = todayStr;
+      for (let r = 0; r < Math.min(4, rows.length); r++) {
+        const f = excelToISO(rows[r] ? rows[r][colClave] : '');
+        if (f) { blockDate = f; break; }
+      }
+
+      for (let r = 1; r < rows.length; r++) {
+        const row = rows[r];
+        if (!row) continue;
+
+        const clave = row[colClave];
+        if (clave === undefined || clave === null || String(clave).trim() === '') break;
+
+        const key = upTxt(clave);
+        if (key === 'CLAVE' || key === 'NO' || key === 'NO.' || key.includes('/2026')) continue;
+
+        records.push({
+          id: 'cot_' + Math.random().toString(36).substr(2, 9),
+          type: 'Cotización',
+          key,
+          entity: row[colEntidad] ? upTxt(row[colEntidad]) : 'MOSTRADOR',
+          minutes: Number(row[colMinutos]) || 5,
+          date: blockDate
+        });
+        count++;
+      }
+    });
+    return count;
+  }
+
+  function importarPedidos(ws) {
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: true });
+    let importados = 0, omitidos = 0;
+    if (!rows.length) return { importados, omitidos };
+
+    const startR = XLSX.utils.decode_range(ws['!ref']).s.r;
+
+    const statusByColor = cell => {
+      const rgb = cell && cell.s && cell.s.fgColor && cell.s.fgColor.rgb;
+      if (!rgb || rgb.length < 6) return '';
+      const hex = rgb.slice(-6);
+      const r = parseInt(hex.slice(0, 2), 16), g = parseInt(hex.slice(2, 4), 16), b = parseInt(hex.slice(4, 6), 16);
+      if (r > 200 && g < 100 && b < 100) return 'DEVOLUCIÓN';
+      if (r > 200 && g > 200 && b < 120) return 'PENDIENTE';
+      if (g > 180 && r < 170 && b < 170) return 'COMPLETADO';
+      return '';
+    };
+
+    let headerIdx = -1, c0 = -1;
+    for (let r = 0; r < Math.min(rows.length, 6) && headerIdx === -1; r++) {
+      const c = (rows[r] || []).findIndex(cell => normalizeTxt(cell) === 'clave');
+      if (c !== -1) { headerIdx = r; c0 = c; }
+    }
+    if (headerIdx === -1) { console.warn('No se encontró encabezado CLAVE en la hoja de pedidos'); return { importados, omitidos }; }
+
+    const cEstado = c0 + 9;
+
+    for (let r = headerIdx + 1; r < rows.length; r++) {
+      const row = rows[r];
+      if (!row) continue;
+
+      const clave = row[c0];
+      if (clave === undefined || clave === null || String(clave).trim() === '') continue;
+
+      const key = upTxt(clave);
+      const date = excelToISO(row[c0 + 4]) || todayStr;
+      const arrivalDate = excelToISO(row[c0 + 5]);
+      const folio = upTxt(row[c0 + 7]);
+      const ticket = upTxt(row[c0 + 10]);
+      const comment = upTxt(row[c0 + 11]);
+
+      const existe = records.some(x =>
+        x.type === 'Pedido especial' && x.key === key && x.date === date && (x.folio || '') === folio
+      );
+      if (existe) { omitidos++; continue; }
+
+      let status;
+      if (comment.includes('DEVOL')) {
+        status = 'DEVOLUCIÓN';
+      } else {
+        const cell = ws[XLSX.utils.encode_cell({ r: startR + r, c: cEstado })];
+        status = statusByColor(cell) || (ticket ? 'COMPLETADO' : 'PENDIENTE');
+      }
+
+      records.push({
+        id: 'ped_' + Math.random().toString(36).substr(2, 9),
+        type: 'Pedido especial',
+        key,
+        description: upTxt(row[c0 + 1]),
+        branch: upTxt(row[c0 + 2]),
+        attention: upTxt(row[c0 + 3]),
+        date,
+        arrivalDate,
+        supplier: upTxt(row[c0 + 6]),
+        folio,
+        responsible: upTxt(row[c0 + 8]),
+        status,
+        ticket,
+        comment
+      });
+      importados++;
+    }
+    return { importados, omitidos };
+  }
+
+  const excelFileInput = $('excelFileInput');
+  if (excelFileInput) {
+    excelFileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const workbook = XLSX.read(new Uint8Array(event.target.result), { type: 'array', cellStyles: true });
+
+          records = records.filter(r => r.type !== 'Pedido Especial');
+
+          let cotiz = 0, pedidos = 0, omitidos = 0;
+
+          workbook.SheetNames.forEach(sheetName => {
+            const name = normalizeTxt(sheetName);
+            const ws = workbook.Sheets[sheetName];
+
+            if (name.includes('cotiz')) {
+              cotiz += importarCotizaciones(ws);
+            } else if (name.includes('pedido')) {
+              const res = importarPedidos(ws);
+              pedidos += res.importados;
+              omitidos += res.omitidos;
+            }
+          });
+
+          if (cotiz > 0 || pedidos > 0 || omitidos > 0) {
+            saveRecords();
+            alert(
+              `Importación completada.\n\n` +
+              `Cotizaciones: ${cotiz}\n` +
+              `Pedidos especiales: ${pedidos}\n` +
+              `Pedidos duplicados omitidos: ${omitidos}`
+            );
+            location.reload();
+          } else {
+            alert('No se encontraron registros. Verifica que existan las hojas "COTIZ" y "PEDIDO ESPECIALES".');
+          }
+        } catch (err) {
+          console.error('Error en importación:', err);
+          alert('Error al importar Excel: ' + err.message);
+        } finally {
+          excelFileInput.value = '';
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    };
+  }
+
+
 })();

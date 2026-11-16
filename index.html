@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard & Reporte | Autopartes Toro</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
@@ -188,6 +189,14 @@
           <div class="relative">
             <input type="text" id="reportRangeSelector" placeholder="Seleccionar rango..." class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 cursor-pointer">
           </div>
+
+
+          <label for="excelFileInput" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-file-excel"></i> Importar Excel (.xlsx)
+          </label>
+          <input type="file" id="excelFileInput" accept=".xlsx, .xls" class="hidden">
+
+
           <button id="exportBtn" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-download text-emerald-400"></i> Exportar</button>
           <label class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer flex items-center gap-1.5"><i class="fa-solid fa-upload text-sky-400"></i> Importar<input type="file" id="importFile" accept=".json" multiple class="hidden"></label>
           <button id="purgeBtn" class="px-3 py-2 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-xs font-semibold rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-trash-can"></i> Purgar</button>
