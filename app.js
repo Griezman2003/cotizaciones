@@ -816,4 +816,339 @@
     };
     loop();
   })();
+
+
+
+
+  // --- LÓGICA PARA LA SECCIÓN DE ANÁLISIS Y FÓRMULAS ---
+  let mathStep = 1;
+  const maxMathSteps = 6;
+  let mathAutoTimer = null;
+
+  if ($('algoTreeSvg')) {
+    const cotizList = records.filter(r => r.type === 'Cotización');
+    const firstDayMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`;
+
+    initMathVisualizer(cotizList, firstDayMonth, todayStr);
+
+    if ($('analysisRangeSelector')) {
+      flatpickr("#analysisRangeSelector", {
+        mode: "range", locale: "es", dateFormat: "Y-m-d", defaultDate: [firstDayMonth, todayStr],
+        onChange: (selectedDates, dateStr, instance) => {
+          if (selectedDates.length === 2) {
+            stopMathAuto();
+            mathStep = 1;
+            initMathVisualizer(
+              cotizList,
+              instance.formatDate(selectedDates[0], "Y-m-d"),
+              instance.formatDate(selectedDates[1], "Y-m-d")
+            );
+          }
+        }
+      });
+    }
+  }
+
+  function initMathVisualizer(cotizList, startDate, endDate) {
+    const periodCotiz = cotizList.filter(r => (r.date || todayStr) >= startDate && (r.date || todayStr) <= endDate);
+    const N = periodCotiz.length;
+
+    if (N === 0) {
+      $('algoTreeSvg').innerHTML = `<text x="360" y="235" text-anchor="middle" fill="#94a3b8" font-size="14">No hay cotizaciones en el rango ${startDate} al ${endDate}</text>`;
+      $('mathematicalExplanations').innerHTML = `<p class="text-xs text-slate-400 text-center">Selecciona un rango con cotizaciones registradas para ver la explicación detallada.</p>`;
+      return;
+    }
+
+    const valores = periodCotiz.map(r => Number(r.minutes));
+    const suma = valores.reduce((acc, v) => acc + v, 0);
+    const media = suma / N;
+    const diffsCuadradas = valores.map(v => Math.pow(v - media, 2));
+    const sumaCuadrados = diffsCuadradas.reduce((acc, v) => acc + v, 0);
+    const varianza = sumaCuadrados / N;
+    const desvStd = Math.sqrt(varianza);
+
+    const data = { periodCotiz, valores, N, suma, media, diffsCuadradas, sumaCuadrados, varianza, desvStd, startDate, endDate };
+
+    renderMathState(mathStep, data);
+
+    $('dbgNextBtn').onclick = () => {
+      stopMathAuto();
+      if (mathStep < maxMathSteps) {
+        mathStep++;
+        renderMathState(mathStep, data);
+      }
+    };
+
+    $('dbgPrevBtn').onclick = () => {
+      stopMathAuto();
+      if (mathStep > 1) {
+        mathStep--;
+        renderMathState(mathStep, data);
+      }
+    };
+
+    // Botón Reproducir / Pausar Automático
+    $('dbgPlayBtn').onclick = () => {
+      if (mathAutoTimer) {
+        stopMathAuto();
+      } else {
+        const icon = $('dbgPlayIcon'), txt = $('dbgPlayText');
+        if (icon) icon.className = 'fa-solid fa-pause';
+        if (txt) txt.textContent = 'Pausar';
+
+        mathAutoTimer = setInterval(() => {
+          if (mathStep < maxMathSteps) {
+            mathStep++;
+            renderMathState(mathStep, data);
+          } else {
+            stopMathAuto();
+            mathStep = 1;
+            renderMathState(mathStep, data);
+          }
+        }, 3000);
+      }
+    };
+
+    $('dbgResetBtn').onclick = () => {
+      stopMathAuto();
+      mathStep = 1;
+      renderMathState(mathStep, data);
+    };
+  }
+
+  function stopMathAuto() {
+    if (mathAutoTimer) {
+      clearInterval(mathAutoTimer);
+      mathAutoTimer = null;
+      const icon = $('dbgPlayIcon'), txt = $('dbgPlayText');
+      if (icon) icon.className = 'fa-solid fa-play';
+      if (txt) txt.textContent = 'Ejecutar';
+    }
+  }
+
+  function renderMathState(step, m) {
+    const svg = $('algoTreeSvg');
+    const expBox = $('mathematicalExplanations');
+    const titleEl = $('debuggerTitle');
+    const badgeEl = $('stepBadge');
+    const progEl = $('debuggerProgress');
+    const formulaBadge = $('currentFormulaBadge');
+    const resTitle = $('resultLabelTitle');
+    const resVal = $('resultValueDisplay');
+    const prevBtn = $('dbgPrevBtn');
+    const nextBtn = $('dbgNextBtn');
+
+    if (!svg) return;
+
+    if (badgeEl) badgeEl.textContent = `ETAPA ${step} / ${maxMathSteps}`;
+    if (progEl) progEl.style.width = `${Math.round((step / maxMathSteps) * 100)}%`;
+    if (formulaBadge) formulaBadge.textContent = `Fórmula ${step} de ${maxMathSteps}`;
+
+    if (prevBtn) prevBtn.disabled = step === 1;
+    if (nextBtn) nextBtn.disabled = step === maxMathSteps;
+
+    const stepTitles = [
+      "1. Conteo de Cotizaciones Realizadas (N)",
+      "2. Suma Total de Minutos Invertidos (Σ xᵢ)",
+      "3. Cálculo del Promedio o Media Aritmética (x̄)",
+      "4. Análisis de Diferencias al Cuadrado (xᵢ - x̄)²",
+      "5. Cálculo de la Variabilidad o Varianza (s²)",
+      "6. Obtención de la Desviación Estándar (s)"
+    ];
+    if (titleEl) titleEl.textContent = stepTitles[step - 1];
+
+    let svgContent = `
+      <defs>
+        <linearGradient id="gradGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#10b981" />
+          <stop offset="100%" stop-color="#059669" />
+        </linearGradient>
+        <linearGradient id="gradBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#38bdf8" />
+          <stop offset="100%" stop-color="#0284c7" />
+        </linearGradient>
+        <linearGradient id="gradAmber" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#f59e0b" />
+          <stop offset="100%" stop-color="#d97706" />
+        </linearGradient>
+      </defs>
+    `;
+
+    svgContent += `<path d="M 360 72 C 360 110, 190 95, 190 135" fill="none" stroke="#10b981" stroke-width="3" class="svg-branch ${step >= 2 ? 'active' : ''}" />`;
+    svgContent += `<path d="M 360 72 C 360 110, 530 95, 530 135" fill="none" stroke="#38bdf8" stroke-width="3" class="svg-branch ${step >= 3 ? 'active' : ''}" />`;
+    svgContent += `<path d="M 190 200 C 190 230, 360 215, 360 245" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="5,4" class="svg-branch ${step >= 3 ? 'active' : ''}" />`;
+    svgContent += `<path d="M 530 200 C 530 230, 360 215, 360 245" fill="none" stroke="#38bdf8" stroke-width="2.5" class="svg-branch ${step >= 3 ? 'active' : ''}" />`;
+    svgContent += `<path d="M 360 310 C 360 345, 160 330, 160 370" fill="none" stroke="#38bdf8" stroke-width="3" class="svg-branch ${step >= 4 ? 'active' : ''}" />`;
+    svgContent += `<path d="M 255 405 L 285 405" fill="none" stroke="#f59e0b" stroke-width="3" class="svg-branch ${step >= 5 ? 'active' : ''}" />`;
+    svgContent += `<path d="M 445 405 L 475 405" fill="none" stroke="#f59e0b" stroke-width="3" class="svg-branch ${step >= 6 ? 'active' : ''}" />`;
+
+    svgContent += `
+      <g class="svg-node ${step >= 1 ? 'active' : ''}">
+        <rect x="250" y="12" width="220" height="60" rx="14" fill="#0f172a" stroke="${step === 1 ? '#10b981' : '#334155'}" stroke-width="2" />
+        <text x="360" y="34" text-anchor="middle" fill="#10b981" font-size="10" font-weight="bold" font-family="monospace">1. CANTIDAD (N)</text>
+        <text x="360" y="56" text-anchor="middle" fill="#ffffff" font-size="15" font-weight="bold">${m.N} cotizaciones</text>
+      </g>
+      <g class="svg-node ${step >= 2 ? 'active' : ''}">
+        <rect x="85" y="135" width="210" height="65" rx="14" fill="#0f172a" stroke="${step === 2 ? '#10b981' : '#334155'}" stroke-width="2" />
+        <text x="190" y="157" text-anchor="middle" fill="#10b981" font-size="10" font-weight="bold" font-family="monospace">2. SUMA TOTAL (Σ xᵢ)</text>
+        <text x="190" y="181" text-anchor="middle" fill="#34d399" font-size="15" font-weight="bold">${m.suma.toFixed(1)} min</text>
+      </g>
+      <g class="svg-node ${step >= 3 ? 'active' : ''}">
+        <rect x="435" y="135" width="190" height="65" rx="14" fill="#0f172a" stroke="#38bdf8" stroke-width="2" />
+        <text x="530" y="157" text-anchor="middle" fill="#38bdf8" font-size="10" font-weight="bold" font-family="monospace">DIVISOR TOTAL</text>
+        <text x="530" y="181" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="bold">÷ ${m.N} registros</text>
+      </g>
+      <g class="svg-node ${step >= 3 ? 'active' : ''}">
+        <rect x="250" y="245" width="220" height="65" rx="14" fill="#0f172a" stroke="${step === 3 ? '#38bdf8' : '#334155'}" stroke-width="2" />
+        <text x="360" y="267" text-anchor="middle" fill="#38bdf8" font-size="10" font-weight="bold" font-family="monospace">3. PROMEDIO (x̄)</text>
+        <text x="360" y="291" text-anchor="middle" fill="#38bdf8" font-size="15" font-weight="bold">${m.media.toFixed(2)} min</text>
+      </g>
+      <g class="svg-node ${step >= 4 ? 'active' : ''}">
+        <rect x="55" y="370" width="200" height="70" rx="14" fill="#0f172a" stroke="${step === 4 ? '#38bdf8' : '#334155'}" stroke-width="2" />
+        <text x="155" y="393" text-anchor="middle" fill="#38bdf8" font-size="9.5" font-weight="bold" font-family="monospace">4. SUMA CUADRÁTICA</text>
+        <text x="155" y="411" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="monospace">Σ(xᵢ - x̄)²</text>
+        <text x="155" y="429" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="bold">${m.sumaCuadrados.toFixed(2)}</text>
+      </g>
+      <g class="svg-node ${step >= 5 ? 'active' : ''}">
+        <rect x="285" y="370" width="160" height="70" rx="14" fill="#0f172a" stroke="${step === 5 ? '#f59e0b' : '#334155'}" stroke-width="2" />
+        <text x="365" y="393" text-anchor="middle" fill="#f59e0b" font-size="9.5" font-weight="bold" font-family="monospace">5. VARIANZA (s²)</text>
+        <text x="365" y="411" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="monospace">Σ / N</text>
+        <text x="365" y="429" text-anchor="middle" fill="#fbbf24" font-size="13" font-weight="bold">${m.varianza.toFixed(2)}</text>
+      </g>
+      <g class="svg-node ${step >= 6 ? 'active' : ''}">
+        <rect x="475" y="370" width="190" height="70" rx="14" fill="#0f172a" stroke="#f59e0b" stroke-width="2" />
+        <text x="570" y="393" text-anchor="middle" fill="#f59e0b" font-size="9.5" font-weight="bold" font-family="monospace">6. DESVIACIÓN (s)</text>
+        <text x="570" y="411" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="monospace">Raíz de la Varianza</text>
+        <text x="570" y="429" text-anchor="middle" fill="#fbbf24" font-size="14" font-weight="bold">±${m.desvStd.toFixed(2)} min</text>
+      </g>
+    `;
+
+    svg.innerHTML = svgContent;
+
+    // EXPLICACIONES DETALLADAS
+    const explanations = {
+      1: `
+        <div class="space-y-2.5">
+          <div class="text-xs font-bold text-emerald-400 uppercase flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-question"></i> Paso 1: ¿Qué es N y de dónde sale?
+          </div>
+          <p class="text-xs text-slate-200 leading-relaxed">
+            Imagina que al finalizar el día revisas tu libreta o sistema y cuentas cuántas cotizaciones realizaste en total. Ese número total es <strong>N</strong>.
+          </p>
+          <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-emerald-300">
+            <strong>En los datos actuales:</strong> El sistema contó exactamente <strong>${m.N} cotizaciones</strong> registradas en el rango seleccionado.
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            <strong>¿Por qué es importante?</strong> Porque es la base de todo. Si no sabemos cuántas veces cotizamos, no podemos calcular promedios ni saber con cuántos datos estamos trabajando.
+          </p>
+        </div>
+      `,
+      2: `
+        <div class="space-y-2.5">
+          <div class="text-xs font-bold text-emerald-400 uppercase flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-question"></i> Paso 2: ¿Cómo se obtiene la Suma Total (Σ xᵢ)?
+          </div>
+          <p class="text-xs text-slate-200 leading-relaxed">
+            Cada vez que cotizas una pieza, anotas o el sistema mide cuántos minutos te tomó (ej. 2 min, 5 min, 3 min). El símbolo <strong>Σ (Sigma)</strong> significa simplemente "juntar todo".
+          </p>
+          <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-emerald-300">
+            ➕ <strong>Operación aritmética:</strong> Sumamos los minutos de cada una de las ${m.N} cotizaciones: <span class="font-mono text-white">[${m.valores.slice(0, 4).join(', ')}${m.valores.length > 4 ? ', ...' : ''}]</span>
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            <strong>Resultado:</strong> Si juntaras todo ese tiempo en un solo bloque, habrás invertido <strong>${m.suma.toFixed(1)} minutos</strong> puramente cotizando refacciones en el periodo.
+          </p>
+        </div>
+      `,
+      3: `
+        <div class="space-y-2.5">
+          <div class="text-xs font-bold text-sky-400 uppercase flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-question"></i> Paso 3: ¿Qué es el Promedio o Media (x̄)?
+          </div>
+          <p class="text-xs text-slate-200 leading-relaxed">
+            El promedio responde a la pregunta: <em>"Si repartiéramos el tiempo total equitativamente entre cada cotización, ¿cuánto tardaría cada una?"</em>.
+          </p>
+          <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono text-sky-300">
+            ➗ <strong>Fórmula:</strong> (Suma total / Cantidad N) = (${m.suma.toFixed(1)} min / ${m.N})
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            <strong>Resultado:</strong> Nos da <strong>${m.media.toFixed(2)} minutos</strong> por cotización. Este es tu estándar de velocidad habitual.
+          </p>
+        </div>
+      `,
+      4: `
+        <div class="space-y-2.5">
+          <div class="text-xs font-bold text-sky-400 uppercase flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-question"></i> Paso 4: ¿Qué son las Diferencias al Cuadrado (xᵢ - x̄)²?
+          </div>
+          <p class="text-xs text-slate-200 leading-relaxed">
+            Aquí comparamos cada cotización individual contra tu promedio (<code class="text-sky-300">${m.media.toFixed(2)} min</code>) para ver qué tanto se desvía de lo normal.
+          </p>
+          <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300 leading-relaxed">
+            <strong class="text-sky-300">¿Por qué se eleva al cuadrado? (Truco matemático):</strong><br>
+            1. Si una cotización fue más rápida que el promedio, la resta sale <em>negativa</em>. Si fue más lenta, sale <em>positiva</em>. Si las sumáramos tal cual, se cancelarían y darían cero.<br>
+            2. Al multiplicar cada diferencia por sí misma (al cuadrado), todo se vuelve positivo y además <strong>se castigan o exageran los retrasos grandes</strong> para prestarles atención.
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Sumando todos esos cuadrados de tus cotizaciones obtenemos un total de <strong>${m.sumaCuadrados.toFixed(2)}</strong>.
+          </p>
+        </div>
+      `,
+      5: `
+        <div class="space-y-2.5">
+          <div class="text-xs font-bold text-amber-400 uppercase flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-question"></i> Paso 5: ¿Qué es la Varianza (s²)?
+          </div>
+          <p class="text-xs text-slate-200 leading-relaxed">
+            La varianza es simplemente sacar el <strong>promedio de esos cuadrados</strong> que calculamos en el paso anterior.
+          </p>
+          <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono text-amber-300">
+            ➗ <strong>Operación:</strong> (Suma Cuadrática / N) = (${m.sumaCuadrados.toFixed(2)} / ${m.N})
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            <strong>Resultado:</strong> Da <strong>${m.varianza.toFixed(2)}</strong>. Sin embargo, como elevamos los números al cuadrado en el paso 4, esta unidad quedó "al cuadrado" (no son minutos normales), por lo que pasamos al último paso.
+          </p>
+        </div>
+      `,
+      6: `
+        <div class="space-y-2.5">
+          <div class="text-xs font-bold text-amber-400 uppercase flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-question"></i> Paso 6: ¿Para qué sirve la Desviación Estándar (s)?
+          </div>
+          <p class="text-xs text-slate-200 leading-relaxed">
+            Es la métrica reina. Como la varianza estaba en "minutos cuadrados", le sacamos la <strong>raíz cuadrada</strong> para regresar a los minutos reales de reloj.
+          </p>
+          <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono text-amber-300">
+            📐 <strong>Operación final:</strong> Raíz cuadrada de la varianza = √(${m.varianza.toFixed(2)})
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            <strong>Conclusión para el mostrador:</strong> Tu desviación es <strong>±${m.desvStd.toFixed(2)} min</strong>. Esto significa que aunque tu promedio al cotizar es de <code class="text-sky-300">${m.media.toFixed(2)} min</code>, tus tiempos normales se mueven en un rango seguro de más/menos ese margen.
+          </p>
+        </div>
+      `
+    };
+
+    expBox.innerHTML = explanations[step];
+
+    // ACTUALIZAR TARJETA DE RESULTADO INFERIOR
+    const resultTitles = [
+      "Total de Registros (N)",
+      "Suma Acumulada (Σ xᵢ)",
+      "Promedio Calculado (x̄)",
+      "Suma de Desviaciones Cuadráticas",
+      "Variabilidad (Varianza s²)",
+      "Desviación Estándar Final (s)"
+    ];
+    const resultValues = [
+      `${m.N} cotizaciones`,
+      `${m.suma.toFixed(1)} minutos`,
+      `${m.media.toFixed(2)} min por cotización`,
+      `${m.sumaCuadrados.toFixed(2)}`,
+      `${m.varianza.toFixed(2)}`,
+      `±${m.desvStd.toFixed(2)} min`
+    ];
+
+    if (resTitle) resTitle.textContent = resultTitles[step - 1];
+    if (resVal) resVal.textContent = resultValues[step - 1];
+  }
+
 })();
