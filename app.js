@@ -1129,7 +1129,6 @@
 
     expBox.innerHTML = explanations[step];
 
-    // ACTUALIZAR TARJETA DE RESULTADO INFERIOR
     const resultTitles = [
       "Total de Registros (N)",
       "Suma Acumulada (Σ xᵢ)",
