@@ -317,7 +317,7 @@
 
         let html = `
           <div style="margin-bottom: 20px;">
-            <h2 style="font-size: 20px; font-weight: bold; margin: 0 0 4px 0;">Historial Completo de Pedidos Especiales - Autopartes Toro</h2>
+            <h2 style="font-size: 20px; font-weight: bold; margin: 0 0 4px 0;">Historial de Pedidos Especiales - Dpt Cotizaciones</h2>
             <p style="font-size: 12px; color: #94a3b8; margin: 0;">Total de registros: ${allPedidos.length} | Fecha de generación: ${todayStr}</p>
           </div>
           <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left;">
