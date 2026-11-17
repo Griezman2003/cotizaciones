@@ -234,7 +234,7 @@
   function resetCotizForm() {
     editingCotizId = null;
     if ($('key')) $('key').value = '';
-    if ($('entity')) $('entity').value = localStorage.getItem(KEYS.lastEntity) || 'MOSTRADOR';
+    if ($('entity')) $('entity').value = localStorage.getItem(KEYS.lastEntity) || '';
     if ($('minutes')) $('minutes').value = '';
     if ($('entryError')) {
       $('entryError').textContent = '';
