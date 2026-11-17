@@ -31,6 +31,21 @@
   let isCollapsed = true; // INICIA COLAPSADO POR DEFECTO
 
   // Cerrar modales con ESC y menús desplegables al hacer clic fuera
+  // document.addEventListener('keydown', e => {
+  //   if (e.key === 'Escape') {
+  //     const cotizModal = $('cotizModal');
+  //     if (cotizModal && !cotizModal.classList.contains('hidden')) {
+  //       cotizModal.classList.add('hidden');
+  //       if (typeof resetCotizForm === 'function') resetCotizForm();
+  //     }
+  //     const pedidoModal = $('pedidoModal');
+  //     if (pedidoModal && !pedidoModal.classList.contains('hidden')) {
+  //       pedidoModal.classList.add('hidden');
+  //       if (typeof resetPedidoForm === 'function') resetPedidoForm();
+  //     }
+  //   }
+  // });
+
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       const cotizModal = $('cotizModal');
@@ -42,6 +57,10 @@
       if (pedidoModal && !pedidoModal.classList.contains('hidden')) {
         pedidoModal.classList.add('hidden');
         if (typeof resetPedidoForm === 'function') resetPedidoForm();
+      }
+      // Limpiar ?nuevo=1 de la barra de direcciones si estuviera presente
+      if (location.search.includes('nuevo=1')) {
+        history.replaceState(null, '', location.pathname);
       }
     }
   });
@@ -1372,7 +1391,6 @@
     };
   }
 
-  // --- ABRIR MODAL AUTOMÁTICAMENTE (viene de un atajo en otra página: ?nuevo=1) ---
   // --- ABRIR MODAL AUTOMÁTICAMENTE (viene de un atajo en otra página o inicio en frío: ?nuevo=1) ---
   const handleNuevoParam = () => {
     if (new URLSearchParams(location.search).get('nuevo') === '1') {
