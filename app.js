@@ -46,21 +46,33 @@
   //   }
   // });
 
+// Cerrar modales con ESC, limpiar formularios o cerrar la aplicación por completo si no hay modales abiertos
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       const cotizModal = $('cotizModal');
+      const pedidoModal = $('pedidoModal');
+      let modalCerrado = false;
+
       if (cotizModal && !cotizModal.classList.contains('hidden')) {
         cotizModal.classList.add('hidden');
         if (typeof resetCotizForm === 'function') resetCotizForm();
+        modalCerrado = true;
       }
-      const pedidoModal = $('pedidoModal');
+      
       if (pedidoModal && !pedidoModal.classList.contains('hidden')) {
         pedidoModal.classList.add('hidden');
         if (typeof resetPedidoForm === 'function') resetPedidoForm();
+        modalCerrado = true;
       }
+
       // Limpiar ?nuevo=1 de la barra de direcciones si estuviera presente
       if (location.search.includes('nuevo=1')) {
         history.replaceState(null, '', location.pathname);
+      }
+
+      // Si no había ningún modal abierto y presionas ESC, se cierra la ventana completa del sistema
+      if (!modalCerrado) {
+        window.close();
       }
     }
   });
