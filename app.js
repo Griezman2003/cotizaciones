@@ -198,29 +198,24 @@
 
       const payload = { type: 'Cotización', key, entity, minutes, date: opDate };
 
-      const wasEditing = !!editingCotizId;
-      if (wasEditing) {
+      if (editingCotizId) {
         const target = records.find(item => item.id === editingCotizId);
         if (target) Object.assign(target, payload);
       } else {
         records.unshift({ id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), ...payload });
       }
+      
       saveRecords();
       localStorage.setItem(KEYS.lastEntity, entity);
       cotizPage = 1;
       renderCotizaciones();
       fillEntityList();
 
-      if (wasEditing) {
-        resetCotizForm();
-        if (cotizModal) cotizModal.classList.add('hidden');
-      } else {
-        // Captura rápida: el modal se queda abierto, conserva entidad y fecha
-        $('key').value = '';
-        $('minutes').value = '';
-        $('entryError').className = 'text-emerald-400 text-xs text-center font-medium';
-        $('entryError').textContent = `✓ ${key} guardada (${minutes} min)`;
-        $('key').focus();
+      // CERRAR EL MODAL Y REINICIAR FORMULARIO (Comportamiento unificado igual que en pedidos)
+      resetCotizForm();
+      if (cotizModal) cotizModal.classList.add('hidden');
+      if (location.search.includes('nuevo=1')) {
+        history.replaceState(null, '', location.pathname);
       }
     });
 
