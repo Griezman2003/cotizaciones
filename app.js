@@ -211,7 +211,6 @@
       renderCotizaciones();
       fillEntityList();
 
-      // CERRAR EL MODAL Y REINICIAR FORMULARIO (Comportamiento unificado igual que en pedidos)
       resetCotizForm();
       if (cotizModal) cotizModal.classList.add('hidden');
       if (location.search.includes('nuevo=1')) {
