@@ -1397,7 +1397,6 @@
     };
   }
 
-  // --- ABRIR MODAL AUTOMÁTICAMENTE (viene de un atajo en otra página o inicio en frío: ?nuevo=1) ---
   const handleNuevoParam = () => {
     if (new URLSearchParams(location.search).get('nuevo') === '1') {
       const tryOpen = (attempts = 0) => {
