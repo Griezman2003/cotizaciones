@@ -1,6 +1,6 @@
 (() => {
   const $ = id => document.getElementById(id);
-  const KEYS = { user: 'partflow_user_v1', session: 'partflow_session_v1', records: 'partflow_records_v1' };
+  const KEYS = { user: 'partflow_user_v1', session: 'partflow_session_v1', records: 'partflow_records_v1', lastEntity: 'partflow_last_entity' };
   const getUser = () => { try { return JSON.parse(localStorage.getItem(KEYS.user)); } catch { return null; } };
   const isSessionActive = localStorage.getItem(KEYS.session) === 'true';
   const user = getUser();
@@ -44,6 +44,24 @@
         if (typeof resetPedidoForm === 'function') resetPedidoForm();
       }
     }
+  });
+
+  // --- ATAJOS GLOBALES: Alt+Q (nueva cotización) / Alt+P (nuevo pedido especial) ---
+  const openNew = kind => {
+    const onPage = kind === 'cotiz' ? $('cotizModal') : $('pedidoModal');
+    if (onPage && $('openModalBtn')) {
+      $('openModalBtn').click();
+      setTimeout(() => $('key') && $('key').focus(), 50);
+    } else {
+      location.href = (kind === 'cotiz' ? 'cotizaciones.html' : 'pedidos.html') + '?nuevo=1';
+    }
+  };
+
+  document.addEventListener('keydown', e => {
+    if (!e.altKey || e.ctrlKey || e.metaKey) return;
+    const k = (e.key || '').toLowerCase();
+    if (e.code === 'KeyQ' || k === 'q') { e.preventDefault(); openNew('cotiz'); }
+    if (e.code === 'KeyP' || k === 'p') { e.preventDefault(); openNew('pedido'); }
   });
 
   document.addEventListener('click', e => {
@@ -141,39 +159,66 @@
       const minutes = Number($('minutes').value);
       const opDate = $('operationDate').value || todayStr;
 
-      if (!Number.isFinite(minutes) || minutes <= 0) { $('entryError').textContent = 'Ingresa un tiempo válido.'; return; }
+      if (!Number.isFinite(minutes) || minutes <= 0) {
+        $('entryError').className = 'text-rose-400 text-xs text-center font-medium';
+        $('entryError').textContent = 'Ingresa un tiempo válido.';
+        return;
+      }
 
       const payload = { type: 'Cotización', key, entity, minutes, date: opDate };
 
-      if (editingCotizId) {
+      const wasEditing = !!editingCotizId;
+      if (wasEditing) {
         const target = records.find(item => item.id === editingCotizId);
-        if (target) { Object.assign(target, payload); saveRecords(); }
+        if (target) Object.assign(target, payload);
       } else {
         records.unshift({ id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), ...payload });
-        saveRecords();
       }
-
-      resetCotizForm();
-      if (cotizModal) cotizModal.classList.add('hidden');
+      saveRecords();
+      localStorage.setItem(KEYS.lastEntity, entity);
       cotizPage = 1;
       renderCotizaciones();
+      fillEntityList();
+
+      if (wasEditing) {
+        resetCotizForm();
+        if (cotizModal) cotizModal.classList.add('hidden');
+      } else {
+        // Captura rápida: el modal se queda abierto, conserva entidad y fecha
+        $('key').value = '';
+        $('minutes').value = '';
+        $('entryError').className = 'text-emerald-400 text-xs text-center font-medium';
+        $('entryError').textContent = `✓ ${key} guardada (${minutes} min)`;
+        $('key').focus();
+      }
     });
 
     if ($('prevCotiz')) $('prevCotiz').onclick = () => { if (cotizPage > 1) { cotizPage--; renderCotizaciones(); } };
     if ($('nextCotiz')) $('nextCotiz').onclick = () => { cotizPage++; renderCotizaciones(); };
 
     renderCotizaciones();
+    fillEntityList();
   }
 
   function resetCotizForm() {
     editingCotizId = null;
     if ($('key')) $('key').value = '';
-    if ($('entity')) $('entity').value = '';
+    if ($('entity')) $('entity').value = localStorage.getItem(KEYS.lastEntity) || 'MOSTRADOR';
     if ($('minutes')) $('minutes').value = '';
-    if ($('entryError')) $('entryError').textContent = '';
+    if ($('entryError')) {
+      $('entryError').textContent = '';
+      $('entryError').className = 'text-rose-400 text-xs text-center font-medium';
+    }
     if (opDatePickerCotiz) opDatePickerCotiz.setDate(todayStr, true);
     if ($('cotizSubmitBtn')) $('cotizSubmitBtn').textContent = 'Guardar Cotización';
     if ($('cotizModalTitle')) $('cotizModalTitle').innerHTML = '<i class="fa-solid fa-file-invoice-dollar text-emerald-400"></i> Nueva Cotización';
+  }
+
+  function fillEntityList() {
+    const dl = $('entityList');
+    if (!dl) return;
+    const set = new Set(records.filter(r => r.type === 'Cotización' && r.entity).map(r => r.entity));
+    dl.innerHTML = [...set].sort().map(en => `<option value="${en}">`).join('');
   }
 
   function renderCotizaciones() {
@@ -228,6 +273,7 @@
         $('minutes').value = r.minutes || '';
         if (opDatePickerCotiz) opDatePickerCotiz.setDate(r.date || todayStr, true);
         editingCotizId = r.id;
+        if ($('entryError')) $('entryError').textContent = '';
         if ($('cotizSubmitBtn')) $('cotizSubmitBtn').textContent = 'Actualizar Cotización';
         if ($('cotizModalTitle')) $('cotizModalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square text-sky-400"></i> Editar Cotización';
         if ($('cotizModal')) $('cotizModal').classList.remove('hidden');
@@ -239,6 +285,7 @@
           records = records.filter(x => x.id !== r.id);
           saveRecords();
           renderCotizaciones();
+          fillEntityList();
         }
       };
 
@@ -298,7 +345,7 @@
 
     if ($('prevPedidos')) $('prevPedidos').onclick = () => { if (pedidosPage > 1) { pedidosPage--; renderPedidos(); } };
     if ($('nextPedidos')) $('nextPedidos').onclick = () => { pedidosPage++; renderPedidos(); };
-    
+
     if ($('downloadPedidoImg')) {
       $('downloadPedidoImg').onclick = async () => {
         const allPedidos = records.filter(r => r.type === 'Pedido especial');
@@ -520,11 +567,11 @@
       e.preventDefault();
       const rawUrl = $('mlUrlInput').value.trim();
 
-      records.unshift({ 
-        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), 
-        type: 'Pedido Mercado Libre', 
-        date: todayStr, 
-        mlLink: rawUrl 
+      records.unshift({
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        type: 'Pedido Mercado Libre',
+        date: todayStr,
+        mlLink: rawUrl
       });
       saveRecords();
       $('mlUrlInput').value = '';
@@ -816,9 +863,6 @@
     };
     loop();
   })();
-
-
-
 
   // --- LÓGICA PARA LA SECCIÓN DE ANÁLISIS Y FÓRMULAS ---
   let mathStep = 1;
@@ -1150,7 +1194,6 @@
     if (resVal) resVal.textContent = resultValues[step - 1];
   }
 
-
   // --- IMPORTADOR DE EXCEL CRUDO (SheetJS) ---
 
   const normalizeTxt = v => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
@@ -1291,8 +1334,6 @@
         try {
           const workbook = XLSX.read(new Uint8Array(event.target.result), { type: 'array', cellStyles: true });
 
-          records = records.filter(r => r.type !== 'Pedido Especial');
-
           let cotiz = 0, pedidos = 0, omitidos = 0;
 
           workbook.SheetNames.forEach(sheetName => {
@@ -1331,5 +1372,11 @@
     };
   }
 
+  // --- ABRIR MODAL AUTOMÁTICAMENTE (viene de un atajo en otra página: ?nuevo=1) ---
+  if (new URLSearchParams(location.search).get('nuevo') === '1' && $('openModalBtn')) {
+    $('openModalBtn').click();
+    setTimeout(() => $('key') && $('key').focus(), 50);
+    history.replaceState(null, '', location.pathname);
+  }
 
 })();
