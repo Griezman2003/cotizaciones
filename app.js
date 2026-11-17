@@ -1373,10 +1373,27 @@
   }
 
   // --- ABRIR MODAL AUTOMÁTICAMENTE (viene de un atajo en otra página: ?nuevo=1) ---
-  if (new URLSearchParams(location.search).get('nuevo') === '1' && $('openModalBtn')) {
-    $('openModalBtn').click();
-    setTimeout(() => $('key') && $('key').focus(), 50);
-    history.replaceState(null, '', location.pathname);
+  // --- ABRIR MODAL AUTOMÁTICAMENTE (viene de un atajo en otra página o inicio en frío: ?nuevo=1) ---
+  const handleNuevoParam = () => {
+    if (new URLSearchParams(location.search).get('nuevo') === '1') {
+      const tryOpen = (attempts = 0) => {
+        const btn = $('openModalBtn');
+        if (btn) {
+          btn.click();
+          setTimeout(() => $('key') && $('key').focus(), 100);
+          history.replaceState(null, '', location.pathname);
+        } else if (attempts < 20) {
+          setTimeout(() => tryOpen(attempts + 1), 100);
+        }
+      };
+      setTimeout(() => tryOpen(), 150);
+    }
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', handleNuevoParam);
+  } else {
+    handleNuevoParam();
   }
 
 })();
